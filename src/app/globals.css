@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Палитра взята с черновика: глубокий сине-чёрный фон, холодные
+   голубые свечения, светло-циановый текст заголовков.
+------------------------------------------------------------------ */
+:root {
+  --bg: #03060d;
+  --bg-deep: #050b18;
+  --ink: #e8f1f8;
+  --ink-dim: #9fb3c8;
+  --ink-faint: #64778c;
+  --accent: #bfe4f5;
+  --accent-strong: #7fd2f0;
+  --line: rgba(159, 179, 200, 0.18);
+
+  --glow-blue: #1d4ed8;
+  --glow-cyan: #22d3ee;
+  --glow-deep: #0b3a6f;
+}
+
+@theme inline {
+  --font-display: var(--font-kharkiv);
+  --font-sans: var(--font-geist-sans);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-line: var(--line);
+}
+
+html {
+  background: var(--bg);
+  /* Скролл ведёт всю анимацию — плавность важнее «резинки» */
+  scroll-behavior: auto;
+}
+
+body {
+  /* Фон рисует компонент Background — свой фон здесь перекрыл бы его */
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Заголовки в стиле черновика: широкий трекинг, тонкие формы */
+.display {
+  font-family: var(--font-kharkiv), var(--font-geist-sans), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  color: var(--accent);
+}
+
+.eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* Каретка для эффекта набора текста */
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-left: 0.12em;
+  vertical-align: -0.12em;
+  background: var(--accent-strong);
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Тонкие скроллбары внутри карточек */
+.thin-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(159, 179, 200, 0.25);
+  border-radius: 99px;
+}
+
+/* Стекло для карточек кейсов и формы */
+.glass {
+  background: linear-gradient(
+    160deg,
+    rgba(20, 38, 66, 0.55),
+    rgba(6, 14, 28, 0.5)
+  );
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret::after {
+    animation: none;
+  }
+}

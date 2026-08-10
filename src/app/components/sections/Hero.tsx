@@ -1,0 +1,85 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
+
+import { hero } from "@/content/site";
+import TypeLine from "../motion/TypeLine";
+import Reveal from "../motion/Reveal";
+import HeroPhoto from "./HeroPhoto";
+
+export default function Hero({ active }: { active: boolean }) {
+    const reduced = useReducedMotion();
+
+    return (
+        <div className="relative h-full w-full overflow-hidden">
+            {/* Фото уходит за правый край кадра — так композиция
+                не выглядит «карточкой на подложке» */}
+            <HeroPhoto active={active} />
+
+            <div className="relative z-10 flex h-full items-center">
+                <div className="mx-auto w-full max-w-6xl px-6 sm:px-10">
+                    <div className="max-w-[26rem] sm:max-w-[34rem] lg:max-w-[36rem] xl:max-w-[41rem]">
+                        <Reveal active={active} delay={0.05} y={16}>
+                            <p className="eyebrow">{hero.name}</p>
+                        </Reveal>
+
+                        <TypeLine
+                            as="h1"
+                            active={active}
+                            text={hero.role}
+                            speed={55}
+                            delay={280}
+                            className="display mt-6 block text-[clamp(1.7rem,4.6vw,4.6rem)] text-balance"
+                        />
+
+                        <Reveal
+                            active={active}
+                            delay={1.25}
+                            y={12}
+                            className="mt-4 flex justify-end"
+                        >
+                            <span className="font-[family:var(--font-geist-sans)] text-base tracking-[0.18em] text-ink-dim sm:text-lg">
+                                {hero.handle}
+                            </span>
+                        </Reveal>
+
+                        <Reveal active={active} delay={1.45} className="mt-8">
+                            <div className="h-px w-full bg-line" />
+                        </Reveal>
+
+                        <TypeLine
+                            as="p"
+                            active={active}
+                            text={hero.tagline}
+                            speed={20}
+                            delay={1700}
+                            caret={false}
+                            className="mt-6 block text-[clamp(0.9rem,1.6vw,1.2rem)] leading-relaxed tracking-[0.06em] text-ink"
+                        />
+
+                        {/* Подсказка о прокрутке — вся навигация строится на ней */}
+                        <Reveal active={active} delay={2.6} className="mt-12">
+                            <div className="flex items-center gap-4 text-ink-faint">
+                                <span className="text-[0.65rem] uppercase tracking-[0.35em]">
+                                    {hero.scrollHint}
+                                </span>
+                                <motion.span
+                                    aria-hidden
+                                    className="text-xl leading-none"
+                                    animate={reduced ? undefined : { y: [0, 8, 0] }}
+                                    transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut",
+                                    }}
+                                >
+                                    ↓
+                                </motion.span>
+                            </div>
+                        </Reveal>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
