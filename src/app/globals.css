@@ -92,6 +92,16 @@ body {
   border-radius: 99px;
 }
 
+/* Лента кейсов прокручивается, но полосу показывать незачем —
+   роль индикатора играет шкала лет под ней */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Стекло для карточек кейсов и формы */
 .glass {
   background: linear-gradient(

@@ -1,82 +1,224 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import {
-    motion,
-    useMotionValueEvent,
-    useTransform,
-    type MotionValue,
-} from "framer-motion";
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+    type PointerEvent as ReactPointerEvent,
+} from "react";
+import Image from "next/image";
 
 import { cases, type CaseItem } from "@/content/site";
 import TypeLine from "../motion/TypeLine";
 import Reveal from "../motion/Reveal";
 
-type Props = {
-    active: boolean;
-    /** 0..1 — прогресс внутри секции, ведёт ленту по горизонтали */
-    inner: MotionValue<number>;
-    /** перейти к нужному году (значение 0..1 внутри секции) */
-    onSeek?: (fraction: number) => void;
-};
+/** насколько резко лента догоняет цель при прокрутке колесом */
+const EASE = 0.18;
+/** сдвиг мыши, после которого это уже перетаскивание, а не клик */
+const DRAG_THRESHOLD = 6;
+/**
+ * Допуск на «край ленты», px.
+ *
+ * Ширина колонок дробная, поэтому scrollLeft упирается на пиксель
+ * раньше вычисленного максимума. Без запаса лента считает, что ехать
+ * ещё есть куда, забирает колесо себе — и на секции можно застрять.
+ */
+const EDGE = 2;
 
-export default function Cases({ active, inner, onSeek }: Props) {
+export default function Cases({ active }: { active: boolean }) {
     const railRef = useRef<HTMLDivElement>(null);
     const yearRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-    const [distance, setDistance] = useState(0);
-    const [marks, setMarks] = useState<number[]>([]);
     const [current, setCurrent] = useState(0);
+    const [dragging, setDragging] = useState(false);
 
-    // Измеряем ленту: сколько нужно проехать и где начинается каждый год
-    useEffect(() => {
-        const rail = railRef.current;
-        if (!rail) return;
+    // Плавная докрутка: колесо и клики по годам двигают не саму ленту,
+    // а цель, к которой она подтягивается покадрово.
+    const target = useRef(0);
+    const frame = useRef<number | null>(null);
+    const easing = useRef(false);
 
-        const measure = () => {
-            const total = rail.scrollWidth;
-            const visible = rail.parentElement?.clientWidth ?? window.innerWidth;
-            const travel = Math.max(0, total - visible);
-            setDistance(travel);
-
-            setMarks(
-                yearRefs.current.map((el) => {
-                    if (!el || travel === 0) return 0;
-                    return Math.min(1, Math.max(0, el.offsetLeft / travel));
-                }),
-            );
-        };
-
-        measure();
-
-        const ro = new ResizeObserver(measure);
-        ro.observe(rail);
-        if (rail.parentElement) ro.observe(rail.parentElement);
-        window.addEventListener("resize", measure);
-
-        return () => {
-            ro.disconnect();
-            window.removeEventListener("resize", measure);
-        };
+    const stopEasing = useCallback(() => {
+        easing.current = false;
+        if (frame.current !== null) cancelAnimationFrame(frame.current);
+        frame.current = null;
     }, []);
 
-    const x = useTransform(inner, [0, 1], [0, -distance]);
+    const startEasing = useCallback(() => {
+        if (frame.current !== null) return;
 
-    // Подсветка текущего года в нижней шкале
-    useMotionValueEvent(inner, "change", (v) => {
-        let next = 0;
-        for (let i = 0; i < marks.length; i++) {
-            if (v >= marks[i] - 0.02) next = i;
+        const step = () => {
+            const el = railRef.current;
+            if (!el || !easing.current) {
+                frame.current = null;
+                return;
+            }
+
+            const finish = () => {
+                target.current = el.scrollLeft;
+                frame.current = null;
+                easing.current = false;
+            };
+
+            const diff = target.current - el.scrollLeft;
+            if (Math.abs(diff) < 1) {
+                el.scrollLeft = target.current;
+                finish();
+                return;
+            }
+
+            // Шаг меньше пикселя браузер округлит до нуля, и цикл будет
+            // крутиться вечно, продолжая тянуть ленту к старой цели.
+            // Поэтому у последних пикселей идём ровно по одному.
+            const shift = diff * EASE;
+            const before = el.scrollLeft;
+            el.scrollLeft += Math.abs(shift) < 1 ? Math.sign(shift) : shift;
+
+            // Не сдвинулись вообще — значит упёрлись в край ленты
+            if (el.scrollLeft === before) {
+                finish();
+                return;
+            }
+
+            frame.current = requestAnimationFrame(step);
+        };
+
+        easing.current = true;
+        frame.current = requestAnimationFrame(step);
+    }, []);
+
+    /* --- колесо мыши: забираем его себе, только пока лента может ехать.
+       Доехав до края, отдаём событие странице — иначе на секции можно
+       было бы застрять навсегда. --- */
+    useEffect(() => {
+        const el = railRef.current;
+        if (!el) return;
+
+        const onWheel = (e: WheelEvent) => {
+            const max = el.scrollWidth - el.clientWidth;
+            if (max <= 0) return;
+
+            const delta =
+                Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+            if (delta === 0) return;
+
+            // Край проверяем по фактическому положению ленты, а не по цели
+            // докрутки: цель отстаёт на кадры, а ленту могли подвинуть
+            // мышью, пальцем или кликом по году — тогда она устаревает.
+            const real = el.scrollLeft;
+            const atEdge =
+                (delta > 0 && real >= max - EDGE) ||
+                (delta < 0 && real <= EDGE);
+
+            if (atEdge) {
+                stopEasing();
+                return; // край ленты — пусть страница листает секции
+            }
+
+            e.preventDefault();
+
+            // Пока докрутка идёт, продолжаем от цели — так частые щелчки
+            // колеса складываются. Но если цель уехала дальше экрана от
+            // реального положения, она протухла: считаем от ленты.
+            const stale = Math.abs(target.current - real) > el.clientWidth;
+            const base = easing.current && !stale ? target.current : real;
+
+            target.current = Math.max(0, Math.min(max, base + delta));
+            startEasing();
+        };
+
+        el.addEventListener("wheel", onWheel, { passive: false });
+        return () => el.removeEventListener("wheel", onWheel);
+    }, [startEasing, stopEasing]);
+
+    /* --- подсветка текущего года в шкале --- */
+    useEffect(() => {
+        const el = railRef.current;
+        if (!el) return;
+
+        let queued = false;
+
+        const onScroll = () => {
+            if (queued) return;
+            queued = true;
+
+            requestAnimationFrame(() => {
+                queued = false;
+                const x = el.scrollLeft + 48;
+                let next = 0;
+                yearRefs.current.forEach((g, i) => {
+                    if (g && g.offsetLeft <= x) next = i;
+                });
+                setCurrent((prev) => (prev === next ? prev : next));
+            });
+        };
+
+        el.addEventListener("scroll", onScroll, { passive: true });
+        return () => el.removeEventListener("scroll", onScroll);
+    }, []);
+
+    useEffect(() => stopEasing, [stopEasing]);
+
+    /* --- перетаскивание мышью.
+       Палец не трогаем: на телефоне лента и так свайпается нативно. --- */
+    const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: 0 });
+
+    const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+        if (e.pointerType !== "mouse" || e.button !== 0) return;
+        const el = railRef.current;
+        if (!el) return;
+
+        stopEasing();
+        drag.current = {
+            active: true,
+            startX: e.clientX,
+            startLeft: el.scrollLeft,
+            moved: 0,
+        };
+        setDragging(true);
+        el.setPointerCapture(e.pointerId);
+    };
+
+    const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+        if (!drag.current.active) return;
+        const el = railRef.current;
+        if (!el) return;
+
+        const dx = e.clientX - drag.current.startX;
+        drag.current.moved = Math.max(drag.current.moved, Math.abs(dx));
+        el.scrollLeft = drag.current.startLeft - dx;
+    };
+
+    const endDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+        if (!drag.current.active) return;
+        drag.current.active = false;
+        setDragging(false);
+        railRef.current?.releasePointerCapture(e.pointerId);
+    };
+
+    // После перетаскивания не должен срабатывать клик по карточке
+    const onClickCapture = (e: React.MouseEvent) => {
+        if (drag.current.moved > DRAG_THRESHOLD) {
+            e.preventDefault();
+            e.stopPropagation();
         }
-        if (next !== current) setCurrent(next);
-    });
+    };
+
+    const goToYear = (index: number) => {
+        const el = railRef.current;
+        const group = yearRefs.current[index];
+        if (!el || !group) return;
+
+        const max = el.scrollWidth - el.clientWidth;
+        target.current = Math.max(0, Math.min(max, group.offsetLeft - 24));
+        startEasing();
+    };
 
     return (
         /* Низкие окна (телефон боком) — поджимаем поля, иначе лента
            не помещается в кадр */
         <div className="flex h-full w-full flex-col justify-center py-[8vh] [@media(max-height:560px)]:py-[3vh]">
-            {/* Шапка секции — стоит на месте, пока едет лента */}
             <div className="mx-auto w-full max-w-6xl px-6 sm:px-10">
                 <Reveal active={active} y={14}>
                     <p className="eyebrow">{cases.eyebrow}</p>
@@ -100,13 +242,19 @@ export default function Cases({ active, inner, onSeek }: Props) {
                 </div>
             </div>
 
-            {/* Лента: движется горизонтально за вертикальной прокруткой */}
-            <div className="relative mt-8 w-full overflow-hidden [@media(max-height:560px)]:mt-4">
-                <motion.div
-                    ref={railRef}
-                    style={{ x }}
-                    className="flex w-max items-stretch gap-14 px-6 sm:px-10"
-                >
+            {/* Лента: собственный горизонтальный скроллер */}
+            <div
+                ref={railRef}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={endDrag}
+                onPointerCancel={endDrag}
+                onClickCapture={onClickCapture}
+                className={`no-scrollbar relative mt-8 w-full overflow-x-auto overflow-y-hidden overscroll-x-contain [@media(max-height:560px)]:mt-4 ${
+                    dragging ? "cursor-grabbing select-none" : "cursor-grab"
+                }`}
+            >
+                <div className="flex w-max items-stretch gap-14 px-6 sm:px-10">
                     {cases.years.map((group, gi) => (
                         <div
                             key={group.year}
@@ -140,33 +288,44 @@ export default function Cases({ active, inner, onSeek }: Props) {
 
                     {/* Хвост, чтобы последний кейс не упирался в край */}
                     <div className="w-[10vw] shrink-0" aria-hidden />
-                </motion.div>
+                </div>
             </div>
 
-            {/* Шкала лет */}
+            {/* Шкала лет + подсказка, что лентой можно управлять */}
             <div className="mx-auto mt-8 w-full max-w-6xl px-6 sm:px-10 [@media(max-height:560px)]:mt-4">
                 <Reveal active={active} delay={1.1}>
                     <div className="relative">
                         <div className="h-px w-full bg-line" />
-                        <ul className="mt-3 flex justify-between">
-                            {cases.years.map((group, i) => (
-                                <li key={group.year}>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            onSeek?.(marks[i] ?? 0)
-                                        }
-                                        className={`text-[0.68rem] tracking-[0.16em] transition-colors duration-300 ${
-                                            i === current
-                                                ? "text-accent"
-                                                : "text-ink-faint hover:text-ink-dim"
-                                        }`}
-                                    >
-                                        {group.year}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+
+                        <div className="mt-3 flex items-center justify-between gap-4">
+                            <ul className="flex flex-1 justify-between">
+                                {cases.years.map((group, i) => (
+                                    <li key={group.year}>
+                                        <button
+                                            type="button"
+                                            onClick={() => goToYear(i)}
+                                            className={`text-[0.68rem] tracking-[0.16em] transition-colors duration-300 ${
+                                                i === current
+                                                    ? "text-accent"
+                                                    : "text-ink-faint hover:text-ink-dim"
+                                            }`}
+                                        >
+                                            {group.year}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* На тачскрине про мышь писать незачем */}
+                        <p className="mt-4 text-[0.66rem] tracking-[0.14em] text-ink-faint">
+                            <span className="hidden [@media(hover:hover)]:inline">
+                                Тяните ленту мышью или крутите колесо над ней
+                            </span>
+                            <span className="[@media(hover:hover)]:hidden">
+                                Листайте ленту вбок
+                            </span>
+                        </p>
                     </div>
                 </Reveal>
             </div>
@@ -184,6 +343,7 @@ function CaseCard({ item }: { item: CaseItem }) {
                     width={item.w}
                     height={item.h}
                     sizes="(max-width: 768px) 70vw, 40vw"
+                    draggable={false}
                     className="h-[clamp(120px,34vh,420px)] w-auto rounded-lg object-cover"
                 />
             </div>

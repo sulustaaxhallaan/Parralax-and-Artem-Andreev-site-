@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { useTransform } from "framer-motion";
 
 import {
     SECTION_WINDOWS,
@@ -24,8 +23,6 @@ import Cases from "./sections/Cases";
 import Results from "./sections/Results";
 import Contacts from "./sections/Contacts";
 
-const CASES = SECTION_WINDOWS.find((w) => w.id === "cases")!;
-
 /**
  * Сцена: один неподвижный кадр с общим фоном, поверх которого
  * сменяются секции. Прокрутка страницы — единственный «плеер»:
@@ -34,24 +31,9 @@ const CASES = SECTION_WINDOWS.find((w) => w.id === "cases")!;
 export default function Stage() {
     const { progress, active } = useStageScroll();
 
-    // 0..1 внутри секции кейсов — этим ведём горизонтальную ленту
-    const casesInner = useTransform(
-        progress,
-        [CASES.holdStart, CASES.holdEnd],
-        [0, 1],
-    );
-
     const goTo = useCallback((index: number) => {
         window.scrollTo({
             top: scrollTargetFor(index) * window.innerHeight,
-            behavior: "smooth",
-        });
-    }, []);
-
-    const seekCases = useCallback((fraction: number) => {
-        const span = CASES.holdEnd - CASES.holdStart;
-        window.scrollTo({
-            top: (CASES.holdStart + fraction * span) * window.innerHeight,
             behavior: "smooth",
         });
     }, []);
@@ -67,13 +49,7 @@ export default function Stage() {
             case "journey":
                 return <Journey active={isActive} />;
             case "cases":
-                return (
-                    <Cases
-                        active={isActive}
-                        inner={casesInner}
-                        onSeek={seekCases}
-                    />
-                );
+                return <Cases active={isActive} />;
             case "results":
                 return <Results active={isActive} />;
             case "contacts":
