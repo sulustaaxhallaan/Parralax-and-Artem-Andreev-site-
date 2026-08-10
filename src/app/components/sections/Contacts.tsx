@@ -30,7 +30,7 @@ export default function Contacts({ active }: { active: boolean }) {
                         text={contacts.lead}
                         delay={1}
                         step={0.016}
-                        className="mt-3 max-w-md text-[0.8rem] leading-5 text-ink-dim sm:mt-4 sm:text-[0.88rem] sm:leading-6"
+                        className="mt-3 max-w-md text-[0.8rem] leading-5 text-ink-dim sm:mt-4 sm:text-[1.02rem] sm:leading-7"
                     />
 
                     <ul className="mt-5 space-y-2 sm:mt-8 sm:space-y-3">
@@ -64,10 +64,10 @@ export default function Contacts({ active }: { active: boolean }) {
                                         </span>
 
                                         <span className="flex flex-col">
-                                            <span className="text-[0.64rem] uppercase tracking-[0.24em] text-ink-faint">
+                                            <span className="text-[0.64rem] uppercase tracking-[0.24em] text-ink-faint sm:text-[0.73rem]">
                                                 {item.label}
                                             </span>
-                                            <span className="mt-0.5 text-[1rem] tracking-[0.04em] sm:text-[1.1rem]">
+                                            <span className="mt-0.5 text-[1rem] tracking-[0.04em] sm:text-[1.28rem]">
                                                 {item.value}
                                             </span>
                                         </span>
@@ -105,7 +105,7 @@ export default function Contacts({ active }: { active: boolean }) {
                     </Reveal>
 
                     <Reveal active={active} delay={2.2} className="mt-5 sm:mt-8">
-                        <p className="text-[0.68rem] tracking-[0.12em] text-ink-faint">
+                        <p className="text-[0.68rem] tracking-[0.12em] text-ink-faint sm:text-[0.78rem]">
                             {footer.note}
                         </p>
                     </Reveal>

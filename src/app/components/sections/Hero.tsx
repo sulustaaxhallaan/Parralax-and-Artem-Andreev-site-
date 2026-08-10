@@ -38,7 +38,7 @@ export default function Hero({ active }: { active: boolean }) {
                             y={12}
                             className="mt-4 flex justify-end"
                         >
-                            <span className="font-[family:var(--font-geist-sans)] text-base tracking-[0.18em] text-ink-dim sm:text-lg">
+                            <span className="font-[family:var(--font-geist-sans)] text-base tracking-[0.18em] text-ink-dim sm:text-xl">
                                 {hero.handle}
                             </span>
                         </Reveal>
@@ -54,13 +54,13 @@ export default function Hero({ active }: { active: boolean }) {
                             speed={20}
                             delay={1700}
                             caret={false}
-                            className="mt-6 block text-[clamp(0.9rem,1.6vw,1.2rem)] leading-relaxed tracking-[0.06em] text-ink"
+                            className="mt-6 block text-[clamp(0.9rem,1.9vw,1.45rem)] leading-relaxed tracking-[0.06em] text-ink"
                         />
 
                         {/* Подсказка о прокрутке — вся навигация строится на ней */}
                         <Reveal active={active} delay={2.6} className="mt-12">
                             <div className="flex items-center gap-4 text-ink-faint">
-                                <span className="text-[0.65rem] uppercase tracking-[0.35em]">
+                                <span className="text-[0.65rem] uppercase tracking-[0.35em] sm:text-[0.75rem]">
                                     {hero.scrollHint}
                                 </span>
                                 <motion.span

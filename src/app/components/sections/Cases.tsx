@@ -235,7 +235,7 @@ export default function Cases({ active }: { active: boolean }) {
                     />
 
                     <Reveal active={active} delay={0.9}>
-                        <p className="max-w-sm text-[0.8rem] leading-5 text-ink-dim">
+                        <p className="max-w-sm text-[0.8rem] leading-5 text-ink-dim sm:max-w-md sm:text-[0.92rem] sm:leading-6">
                             {cases.lead}
                         </p>
                     </Reveal>
@@ -268,11 +268,13 @@ export default function Cases({ active }: { active: boolean }) {
                                 <span className="display text-[clamp(2rem,4vw,3.5rem)] leading-none">
                                     {group.year}
                                 </span>
-                                <span className="mt-3 text-[0.82rem] leading-5 text-accent">
+                                {/* На низких окнах возвращаем компактный кегль:
+                                    там ширина десктопная, а высоты нет */}
+                                <span className="mt-3 text-[0.82rem] leading-5 text-accent sm:text-[0.95rem] sm:leading-6 [@media(max-height:560px)]:text-[0.82rem] [@media(max-height:560px)]:leading-5">
                                     {group.caption}
                                 </span>
                                 {group.note ? (
-                                    <span className="mt-3 text-[0.74rem] leading-5 text-ink-faint">
+                                    <span className="mt-3 text-[0.74rem] leading-5 text-ink-faint sm:text-[0.85rem] sm:leading-6 [@media(max-height:560px)]:text-[0.74rem] [@media(max-height:560px)]:leading-5">
                                         {group.note}
                                     </span>
                                 ) : null}
@@ -304,7 +306,7 @@ export default function Cases({ active }: { active: boolean }) {
                                         <button
                                             type="button"
                                             onClick={() => goToYear(i)}
-                                            className={`text-[0.68rem] tracking-[0.16em] transition-colors duration-300 ${
+                                            className={`text-[0.68rem] tracking-[0.16em] transition-colors duration-300 sm:text-[0.78rem] ${
                                                 i === current
                                                     ? "text-accent"
                                                     : "text-ink-faint hover:text-ink-dim"
@@ -318,7 +320,7 @@ export default function Cases({ active }: { active: boolean }) {
                         </div>
 
                         {/* На тачскрине про мышь писать незачем */}
-                        <p className="mt-4 text-[0.66rem] tracking-[0.14em] text-ink-faint">
+                        <p className="mt-4 text-[0.66rem] tracking-[0.14em] text-ink-faint sm:text-[0.76rem] [@media(max-height:560px)]:mt-2 [@media(max-height:560px)]:text-[0.66rem]">
                             <span className="hidden [@media(hover:hover)]:inline">
                                 Тяните ленту мышью или крутите колесо над ней
                             </span>
@@ -349,11 +351,11 @@ function CaseCard({ item }: { item: CaseItem }) {
             </div>
 
             <div className="mt-3.5 max-w-[34ch]">
-                <h3 className="text-[0.9rem] font-medium leading-5 text-accent">
+                <h3 className="text-[0.9rem] font-medium leading-5 text-accent sm:text-[1.02rem] sm:leading-6 [@media(max-height:560px)]:text-[0.9rem] [@media(max-height:560px)]:leading-5">
                     {item.title}
                 </h3>
                 {item.description ? (
-                    <p className="mt-1.5 text-[0.76rem] leading-5 text-ink-dim">
+                    <p className="mt-1.5 text-[0.76rem] leading-5 text-ink-dim sm:text-[0.88rem] sm:leading-6 [@media(max-height:560px)]:text-[0.76rem] [@media(max-height:560px)]:leading-5">
                         {item.description}
                     </p>
                 ) : null}

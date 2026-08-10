@@ -32,13 +32,13 @@ export default function About({ active }: { active: boolean }) {
                             text={text}
                             delay={0.9 + i * 0.5}
                             step={0.014}
-                            className="max-w-xl text-[0.82rem] leading-6 text-ink-dim sm:text-base sm:leading-8"
+                            className="max-w-xl text-[0.82rem] leading-6 text-ink-dim sm:text-[1.1rem] sm:leading-8"
                         />
                     ))}
                 </div>
 
                 <Reveal active={active} delay={2.1} className="mt-6 sm:mt-9">
-                    <h3 className="display text-[0.8rem] tracking-[0.3em] text-accent">
+                    <h3 className="display text-[0.8rem] tracking-[0.3em] text-accent sm:text-[0.92rem]">
                         {about.approachTitle}
                     </h3>
 
@@ -51,7 +51,7 @@ export default function About({ active }: { active: boolean }) {
                                 text={item}
                                 delay={2.3 + i * 0.16}
                                 step={0.012}
-                                className="relative pl-5 text-[0.8rem] leading-5 text-ink before:absolute before:left-0 before:top-[0.6em] before:h-px before:w-2.5 before:bg-accent sm:text-[0.95rem] sm:leading-6"
+                                className="relative pl-5 text-[0.8rem] leading-5 text-ink before:absolute before:left-0 before:top-[0.6em] before:h-px before:w-2.5 before:bg-accent sm:pl-6 sm:text-[1.05rem] sm:leading-7"
                             />
                         ))}
                     </ul>

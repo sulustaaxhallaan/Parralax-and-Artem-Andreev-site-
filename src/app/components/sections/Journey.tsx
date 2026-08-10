@@ -31,7 +31,7 @@ export default function Journey({ active }: { active: boolean }) {
                     text={journey.lead}
                     delay={0.9}
                     step={0.016}
-                    className="mx-auto mt-3 max-w-2xl text-[0.78rem] leading-5 tracking-[0.04em] text-ink-dim sm:mt-4 sm:text-base sm:leading-6"
+                    className="mx-auto mt-3 max-w-3xl text-[0.78rem] leading-5 tracking-[0.04em] text-ink-dim sm:mt-4 sm:text-[1.12rem] sm:leading-8"
                 />
             </div>
 
@@ -62,7 +62,7 @@ export default function Journey({ active }: { active: boolean }) {
                                                 "0 0 0 4px rgba(127,210,240,0.15)",
                                         }}
                                     />
-                                    <span className="whitespace-nowrap text-[0.7rem] uppercase tracking-[0.24em] text-ink-faint">
+                                    <span className="whitespace-nowrap text-[0.7rem] uppercase tracking-[0.24em] text-ink-faint sm:text-[0.78rem]">
                                         {step.date}
                                     </span>
 
@@ -85,11 +85,11 @@ export default function Journey({ active }: { active: boolean }) {
                                     />
                                 </div>
 
-                                <h3 className="mt-3 text-[0.92rem] font-medium leading-5 text-accent sm:mt-4 sm:text-[1.05rem] sm:leading-6">
+                                <h3 className="mt-3 text-[0.92rem] font-medium leading-5 text-accent sm:mt-4 sm:text-[1.2rem] sm:leading-7">
                                     {step.company}
                                 </h3>
 
-                                <p className="mt-1 text-[0.78rem] leading-4 text-ink sm:mt-1.5 sm:text-[0.85rem] sm:leading-5">
+                                <p className="mt-1 text-[0.78rem] leading-4 text-ink sm:mt-2 sm:text-[0.98rem] sm:leading-6">
                                     {step.position}
                                 </p>
 
@@ -104,7 +104,7 @@ export default function Journey({ active }: { active: boolean }) {
                                                 1.7 + i * 0.25 + j * 0.14
                                             }
                                             step={reduced ? 0 : 0.01}
-                                            className="relative pl-4 text-[0.72rem] leading-5 text-ink-dim before:absolute before:left-0 before:top-[0.7em] before:h-px before:w-2 before:bg-ink-faint sm:text-[0.8rem] sm:leading-6"
+                                            className="relative pl-4 text-[0.72rem] leading-5 text-ink-dim before:absolute before:left-0 before:top-[0.7em] before:h-px before:w-2 before:bg-ink-faint sm:pl-5 sm:text-[0.92rem] sm:leading-7"
                                         />
                                     ))}
                                 </ul>

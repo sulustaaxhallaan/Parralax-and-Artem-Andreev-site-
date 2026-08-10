@@ -70,10 +70,10 @@ export default function FeedbackForm() {
 
     return (
         <div className="glass rounded-2xl p-4 sm:p-7">
-            <h3 className="display text-[0.78rem] tracking-[0.3em] text-accent">
+            <h3 className="display text-[0.78rem] tracking-[0.3em] text-accent sm:text-[0.9rem]">
                 {feedback.title}
             </h3>
-            <p className="mt-2 text-[0.75rem] leading-5 text-ink-dim sm:mt-2.5 sm:text-[0.8rem]">
+            <p className="mt-2 text-[0.75rem] leading-5 text-ink-dim sm:mt-2.5 sm:text-[0.92rem] sm:leading-6">
                 {feedback.lead}
             </p>
 
@@ -93,7 +93,7 @@ export default function FeedbackForm() {
                 />
 
                 <label className="block">
-                    <span className="text-[0.68rem] uppercase tracking-[0.22em] text-ink-faint">
+                    <span className="text-[0.68rem] uppercase tracking-[0.22em] text-ink-faint sm:text-[0.77rem]">
                         {feedback.fields.message.label}
                     </span>
                     <textarea
@@ -101,7 +101,7 @@ export default function FeedbackForm() {
                         rows={3}
                         required
                         placeholder={feedback.fields.message.placeholder}
-                        className="mt-1.5 h-[64px] w-full resize-none rounded-lg border border-line bg-[rgba(4,10,20,0.5)] px-3.5 py-2 text-[0.86rem] text-ink outline-none transition-colors duration-200 placeholder:text-ink-faint focus:border-[rgba(127,210,240,0.55)] sm:h-auto sm:py-2.5"
+                        className="mt-1.5 h-[64px] w-full resize-none rounded-lg border border-line bg-[rgba(4,10,20,0.5)] px-3.5 py-2 text-[0.86rem] text-ink outline-none transition-colors duration-200 placeholder:text-ink-faint focus:border-[rgba(127,210,240,0.55)] sm:h-auto sm:py-2.5 sm:text-[0.98rem]"
                     />
                 </label>
 
@@ -109,7 +109,7 @@ export default function FeedbackForm() {
                     <button
                         type="submit"
                         disabled={status === "sending"}
-                        className="rounded-full border border-[rgba(127,210,240,0.45)] px-6 py-2.5 text-[0.78rem] uppercase tracking-[0.2em] text-accent transition-all duration-300 hover:border-accent hover:bg-[rgba(127,210,240,0.08)] disabled:opacity-50"
+                        className="rounded-full border border-[rgba(127,210,240,0.45)] px-6 py-2.5 text-[0.78rem] uppercase tracking-[0.2em] text-accent transition-all duration-300 hover:border-accent hover:bg-[rgba(127,210,240,0.08)] disabled:opacity-50 sm:px-7 sm:py-3 sm:text-[0.88rem]"
                     >
                         {status === "sending" ? feedback.sending : feedback.submit}
                     </button>
@@ -145,7 +145,7 @@ function Field({
 }) {
     return (
         <label className="block">
-            <span className="text-[0.68rem] uppercase tracking-[0.22em] text-ink-faint">
+            <span className="text-[0.68rem] uppercase tracking-[0.22em] text-ink-faint sm:text-[0.77rem]">
                 {label}
             </span>
             <input
@@ -153,7 +153,7 @@ function Field({
                 name={name}
                 required={required}
                 placeholder={placeholder}
-                className="mt-1.5 w-full rounded-lg border border-line bg-[rgba(4,10,20,0.5)] px-3.5 py-2.5 text-[0.86rem] text-ink outline-none transition-colors duration-200 placeholder:text-ink-faint focus:border-[rgba(127,210,240,0.55)]"
+                className="mt-1.5 w-full rounded-lg border border-line bg-[rgba(4,10,20,0.5)] px-3.5 py-2.5 text-[0.86rem] text-ink outline-none transition-colors duration-200 placeholder:text-ink-faint focus:border-[rgba(127,210,240,0.55)] sm:text-[0.98rem]"
             />
         </label>
     );
@@ -172,7 +172,7 @@ function Note({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.3 }}
-            className={`text-[0.75rem] leading-5 ${
+            className={`text-[0.75rem] leading-5 sm:text-[0.85rem] sm:leading-6 ${
                 tone === "ok" ? "text-accent" : "text-[#f0a5a5]"
             }`}
         >

@@ -37,7 +37,7 @@ export default function Results({ active }: { active: boolean }) {
                         delay={0.9 + i * 0.18}
                         y={26}
                     >
-                        <p className="text-[0.78rem] leading-5 text-ink-dim">
+                        <p className="text-[0.78rem] leading-5 text-ink-dim sm:text-[0.95rem] sm:leading-6">
                             {item.prefix}
                         </p>
 
@@ -49,7 +49,7 @@ export default function Results({ active }: { active: boolean }) {
                             />
                         </p>
 
-                        <p className="mt-2 text-[0.9rem] leading-5 text-ink">
+                        <p className="mt-2 text-[0.9rem] leading-5 text-ink sm:text-[1.1rem] sm:leading-6">
                             {item.label}
                         </p>
                     </Reveal>

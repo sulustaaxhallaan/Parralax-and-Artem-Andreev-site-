@@ -27,7 +27,7 @@ export default function Skills({ active }: { active: boolean }) {
                     text={skills.lead}
                     delay={0.8}
                     step={0.016}
-                    className="max-w-md text-[0.78rem] leading-5 text-ink-dim sm:text-sm sm:leading-6 lg:text-right"
+                    className="max-w-md text-[0.78rem] leading-5 text-ink-dim sm:max-w-lg sm:text-[0.98rem] sm:leading-7 lg:text-right"
                 />
             </div>
 
@@ -45,14 +45,14 @@ export default function Skills({ active }: { active: boolean }) {
                             {/* Резервируем две строки: часть названий
                                 переносится, и без этого списки в ряду
                                 начинались бы на разной высоте */}
-                            <h3 className="min-h-[2lh] text-[0.8rem] font-medium leading-5 tracking-[0.02em] text-accent sm:text-[0.95rem]">
+                            <h3 className="min-h-[2lh] text-[0.8rem] font-medium leading-5 tracking-[0.02em] text-accent sm:text-[1.06rem] sm:leading-6">
                                 {group.title}
                             </h3>
                             <ul className="mt-2 space-y-1 sm:mt-3 sm:space-y-1.5">
                                 {group.items.map((item) => (
                                     <li
                                         key={item}
-                                        className="text-[0.7rem] leading-4 text-ink-dim sm:text-[0.85rem] sm:leading-6"
+                                        className="text-[0.7rem] leading-4 text-ink-dim sm:text-[0.95rem] sm:leading-6"
                                     >
                                         {item}
                                     </li>
@@ -70,7 +70,7 @@ export default function Skills({ active }: { active: boolean }) {
                             key={tool.label}
                             /* Акцентный тег берёт те же цвета, что и кнопка
                                формы, — отдельного стиля не заводим */
-                            className={`rounded-full border px-2.5 py-1 text-[0.65rem] tracking-[0.06em] sm:px-3.5 sm:py-1.5 sm:text-[0.72rem] sm:tracking-[0.08em] ${
+                            className={`rounded-full border px-2.5 py-1 text-[0.65rem] tracking-[0.06em] sm:px-4 sm:py-1.5 sm:text-[0.82rem] sm:tracking-[0.08em] ${
                                 tool.accent
                                     ? "border-[rgba(127,210,240,0.45)] bg-[rgba(127,210,240,0.08)] text-accent"
                                     : "border-line text-ink-dim"
