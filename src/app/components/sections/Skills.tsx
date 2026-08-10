@@ -33,7 +33,7 @@ export default function Skills({ active }: { active: boolean }) {
 
             {/* На телефоне шесть блоков в одну колонку не помещаются —
                 поэтому там сразу две */}
-            <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-6 sm:mt-10 sm:gap-x-10 sm:gap-y-8 lg:grid-cols-3">
+            <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-6 sm:mt-8 sm:gap-x-10 lg:grid-cols-3">
                 {skills.groups.map((group, i) => (
                     <Reveal
                         key={group.title}
@@ -42,7 +42,10 @@ export default function Skills({ active }: { active: boolean }) {
                         y={24}
                     >
                         <div className="border-t border-line pt-3 sm:pt-4">
-                            <h3 className="text-[0.8rem] font-medium leading-5 tracking-[0.02em] text-accent sm:text-[0.95rem]">
+                            {/* Резервируем две строки: часть названий
+                                переносится, и без этого списки в ряду
+                                начинались бы на разной высоте */}
+                            <h3 className="min-h-[2lh] text-[0.8rem] font-medium leading-5 tracking-[0.02em] text-accent sm:text-[0.95rem]">
                                 {group.title}
                             </h3>
                             <ul className="mt-2 space-y-1 sm:mt-3 sm:space-y-1.5">
@@ -60,14 +63,20 @@ export default function Skills({ active }: { active: boolean }) {
                 ))}
             </div>
 
-            <Reveal active={active} delay={2} className="mt-7 sm:mt-12">
+            <Reveal active={active} delay={2} className="mt-7 sm:mt-10">
                 <ul className="flex flex-wrap gap-1.5 sm:gap-2">
                     {skills.stack.map((tool) => (
                         <li
-                            key={tool}
-                            className="rounded-full border border-line px-2.5 py-1 text-[0.65rem] tracking-[0.06em] text-ink-dim sm:px-3.5 sm:py-1.5 sm:text-[0.72rem] sm:tracking-[0.08em]"
+                            key={tool.label}
+                            /* Акцентный тег берёт те же цвета, что и кнопка
+                               формы, — отдельного стиля не заводим */
+                            className={`rounded-full border px-2.5 py-1 text-[0.65rem] tracking-[0.06em] sm:px-3.5 sm:py-1.5 sm:text-[0.72rem] sm:tracking-[0.08em] ${
+                                tool.accent
+                                    ? "border-[rgba(127,210,240,0.45)] bg-[rgba(127,210,240,0.08)] text-accent"
+                                    : "border-line text-ink-dim"
+                            }`}
                         >
-                            {tool}
+                            {tool.label}
                         </li>
                     ))}
                 </ul>
