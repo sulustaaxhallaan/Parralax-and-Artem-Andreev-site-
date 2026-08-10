@@ -73,7 +73,9 @@ export default function Cases({ active, inner, onSeek }: Props) {
     });
 
     return (
-        <div className="flex h-full w-full flex-col justify-center py-[8vh]">
+        /* Низкие окна (телефон боком) — поджимаем поля, иначе лента
+           не помещается в кадр */
+        <div className="flex h-full w-full flex-col justify-center py-[8vh] [@media(max-height:560px)]:py-[3vh]">
             {/* Шапка секции — стоит на месте, пока едет лента */}
             <div className="mx-auto w-full max-w-6xl px-6 sm:px-10">
                 <Reveal active={active} y={14}>
@@ -99,7 +101,7 @@ export default function Cases({ active, inner, onSeek }: Props) {
             </div>
 
             {/* Лента: движется горизонтально за вертикальной прокруткой */}
-            <div className="relative mt-8 w-full overflow-hidden">
+            <div className="relative mt-8 w-full overflow-hidden [@media(max-height:560px)]:mt-4">
                 <motion.div
                     ref={railRef}
                     style={{ x }}
@@ -142,7 +144,7 @@ export default function Cases({ active, inner, onSeek }: Props) {
             </div>
 
             {/* Шкала лет */}
-            <div className="mx-auto mt-8 w-full max-w-6xl px-6 sm:px-10">
+            <div className="mx-auto mt-8 w-full max-w-6xl px-6 sm:px-10 [@media(max-height:560px)]:mt-4">
                 <Reveal active={active} delay={1.1}>
                     <div className="relative">
                         <div className="h-px w-full bg-line" />
@@ -182,7 +184,7 @@ function CaseCard({ item }: { item: CaseItem }) {
                     width={item.w}
                     height={item.h}
                     sizes="(max-width: 768px) 70vw, 40vw"
-                    className="h-[clamp(180px,34vh,420px)] w-auto rounded-lg object-cover"
+                    className="h-[clamp(120px,34vh,420px)] w-auto rounded-lg object-cover"
                 />
             </div>
 

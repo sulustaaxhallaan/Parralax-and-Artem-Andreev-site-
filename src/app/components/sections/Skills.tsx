@@ -12,7 +12,7 @@ export default function Skills({ active }: { active: boolean }) {
                 <p className="eyebrow">{skills.eyebrow}</p>
             </Reveal>
 
-            <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="mt-4 flex flex-col gap-2 sm:mt-5 sm:gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <TypeLine
                     as="h2"
                     active={active}
@@ -27,11 +27,13 @@ export default function Skills({ active }: { active: boolean }) {
                     text={skills.lead}
                     delay={0.8}
                     step={0.016}
-                    className="max-w-md text-sm leading-6 text-ink-dim lg:text-right"
+                    className="max-w-md text-[0.78rem] leading-5 text-ink-dim sm:text-sm sm:leading-6 lg:text-right"
                 />
             </div>
 
-            <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+            {/* На телефоне шесть блоков в одну колонку не помещаются —
+                поэтому там сразу две */}
+            <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-6 sm:mt-10 sm:gap-x-10 sm:gap-y-8 lg:grid-cols-3">
                 {skills.groups.map((group, i) => (
                     <Reveal
                         key={group.title}
@@ -39,15 +41,15 @@ export default function Skills({ active }: { active: boolean }) {
                         delay={1.1 + i * 0.12}
                         y={24}
                     >
-                        <div className="border-t border-line pt-4">
-                            <h3 className="text-[0.95rem] font-medium tracking-[0.02em] text-accent">
+                        <div className="border-t border-line pt-3 sm:pt-4">
+                            <h3 className="text-[0.8rem] font-medium leading-5 tracking-[0.02em] text-accent sm:text-[0.95rem]">
                                 {group.title}
                             </h3>
-                            <ul className="mt-3 space-y-1.5">
+                            <ul className="mt-2 space-y-1 sm:mt-3 sm:space-y-1.5">
                                 {group.items.map((item) => (
                                     <li
                                         key={item}
-                                        className="text-[0.85rem] leading-6 text-ink-dim"
+                                        className="text-[0.7rem] leading-4 text-ink-dim sm:text-[0.85rem] sm:leading-6"
                                     >
                                         {item}
                                     </li>
@@ -58,12 +60,12 @@ export default function Skills({ active }: { active: boolean }) {
                 ))}
             </div>
 
-            <Reveal active={active} delay={2} className="mt-12">
-                <ul className="flex flex-wrap gap-2">
+            <Reveal active={active} delay={2} className="mt-7 sm:mt-12">
+                <ul className="flex flex-wrap gap-1.5 sm:gap-2">
                     {skills.stack.map((tool) => (
                         <li
                             key={tool}
-                            className="rounded-full border border-line px-3.5 py-1.5 text-[0.72rem] tracking-[0.08em] text-ink-dim"
+                            className="rounded-full border border-line px-2.5 py-1 text-[0.65rem] tracking-[0.06em] text-ink-dim sm:px-3.5 sm:py-1.5 sm:text-[0.72rem] sm:tracking-[0.08em]"
                         >
                             {tool}
                         </li>

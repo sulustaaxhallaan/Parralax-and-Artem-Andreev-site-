@@ -31,12 +31,12 @@ export default function Journey({ active }: { active: boolean }) {
                     text={journey.lead}
                     delay={0.9}
                     step={0.016}
-                    className="mx-auto mt-4 max-w-2xl text-sm leading-6 tracking-[0.04em] text-ink-dim sm:text-base"
+                    className="mx-auto mt-3 max-w-2xl text-[0.78rem] leading-5 tracking-[0.04em] text-ink-dim sm:mt-4 sm:text-base sm:leading-6"
                 />
             </div>
 
-            <div className="relative mt-12">
-                <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
+            <div className="relative mt-7 sm:mt-12">
+                <ol className="relative grid gap-6 sm:gap-10 md:grid-cols-3 md:gap-8">
                     {journey.steps.map((step, i) => (
                         <li key={step.company} className="relative">
                             <Reveal
@@ -85,15 +85,15 @@ export default function Journey({ active }: { active: boolean }) {
                                     />
                                 </div>
 
-                                <h3 className="mt-4 text-[1.05rem] font-medium leading-6 text-accent">
+                                <h3 className="mt-3 text-[0.92rem] font-medium leading-5 text-accent sm:mt-4 sm:text-[1.05rem] sm:leading-6">
                                     {step.company}
                                 </h3>
 
-                                <p className="mt-1.5 text-[0.85rem] leading-5 text-ink">
+                                <p className="mt-1 text-[0.78rem] leading-4 text-ink sm:mt-1.5 sm:text-[0.85rem] sm:leading-5">
                                     {step.position}
                                 </p>
 
-                                <ul className="mt-4 space-y-2.5">
+                                <ul className="mt-3 space-y-1.5 sm:mt-4 sm:space-y-2.5">
                                     {step.points.map((point, j) => (
                                         <RevealWords
                                             key={point}
@@ -104,7 +104,7 @@ export default function Journey({ active }: { active: boolean }) {
                                                 1.7 + i * 0.25 + j * 0.14
                                             }
                                             step={reduced ? 0 : 0.01}
-                                            className="relative pl-4 text-[0.8rem] leading-6 text-ink-dim before:absolute before:left-0 before:top-[0.7em] before:h-px before:w-2 before:bg-ink-faint"
+                                            className="relative pl-4 text-[0.72rem] leading-5 text-ink-dim before:absolute before:left-0 before:top-[0.7em] before:h-px before:w-2 before:bg-ink-faint sm:text-[0.8rem] sm:leading-6"
                                         />
                                     ))}
                                 </ul>
