@@ -25,12 +25,16 @@ export default function SectionNav({ active, onGo }: Props) {
                             onClick={() => onGo(i)}
                             aria-label={win.label}
                             aria-current={i === active ? "true" : undefined}
-                            className="group flex items-center gap-3"
+                            className="group relative flex items-center"
                         >
                             {/* Подпись только по наведению — иначе она ляжет
-                                поверх ленты кейсов */}
+                                поверх ленты кейсов.
+
+                                Позиционируем её абсолютно и гасим для курсора:
+                                иначе невидимая подпись раздувает кнопку и
+                                перехватывает клики по всей полосе справа. */}
                             <span
-                                className={`whitespace-nowrap rounded-full bg-[rgba(3,6,13,0.72)] px-2 py-0.5 text-[0.62rem] uppercase tracking-[0.22em] opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 ${
+                                className={`pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-full bg-[rgba(3,6,13,0.72)] px-2 py-0.5 text-[0.62rem] uppercase tracking-[0.22em] opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 ${
                                     i === active ? "text-accent" : "text-ink-dim"
                                 }`}
                             >

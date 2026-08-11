@@ -5,16 +5,16 @@ import { motion, useReducedMotion } from "framer-motion";
 import { hero } from "@/content/site";
 import TypeLine from "../motion/TypeLine";
 import Reveal from "../motion/Reveal";
-import HeroPhoto from "./HeroPhoto";
+import HeroModel from "./HeroModel";
 
 export default function Hero({ active }: { active: boolean }) {
     const reduced = useReducedMotion();
 
     return (
         <div className="relative h-full w-full overflow-hidden">
-            {/* Фото уходит за правый край кадра — так композиция
-                не выглядит «карточкой на подложке» */}
-            <HeroPhoto active={active} />
+            {/* Модель можно крутить перетаскиванием, в покое она
+                медленно поворачивается сама */}
+            <HeroModel active={active} />
 
             <div className="relative z-10 flex h-full items-center">
                 <div className="mx-auto w-full max-w-6xl px-6 sm:px-10">
