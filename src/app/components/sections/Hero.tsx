@@ -12,13 +12,18 @@ export default function Hero({ active }: { active: boolean }) {
 
     return (
         <div className="relative h-full w-full overflow-hidden">
-            {/* Модель можно крутить перетаскиванием, в покое она
-                медленно поворачивается сама */}
-            <HeroModel active={active} />
+            {/* До lg фигура стоит над текстом, с lg — справа от заголовка.
+                Крутится перетаскиванием, в покое поворачивается сама. */}
+            {/* Низкие окна (телефон боком) тоже уходят в строку: колонкой
+                фигура и текст туда не помещаются */}
+            <div className="mx-auto flex h-full w-full max-w-6xl flex-col items-center justify-center gap-5 px-6 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:gap-10 [@media(max-height:560px)]:flex-row [@media(max-height:560px)]:justify-between [@media(max-height:560px)]:gap-6">
+                <HeroModel
+                    active={active}
+                    className="order-first h-[30vh] sm:h-[34vh] lg:order-last lg:h-[68vh] xl:h-[76vh] [@media(max-height:560px)]:order-last [@media(max-height:560px)]:h-[72vh]"
+                />
 
-            <div className="relative z-10 flex h-full items-center">
-                <div className="mx-auto w-full max-w-6xl px-6 sm:px-10">
-                    <div className="max-w-[26rem] sm:max-w-[34rem] lg:max-w-[36rem] xl:max-w-[41rem]">
+                <div className="w-full lg:flex-1 [@media(max-height:560px)]:flex-1">
+                    <div className="max-w-full sm:max-w-[34rem] lg:max-w-[36rem] xl:max-w-[41rem]">
                         <Reveal active={active} delay={0.05} y={16}>
                             <p className="eyebrow">{hero.name}</p>
                         </Reveal>

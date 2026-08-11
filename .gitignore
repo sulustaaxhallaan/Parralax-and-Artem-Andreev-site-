@@ -40,8 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# контрольная склейка слоёв Hero — служебный файл scripts/hero-layers.py
-/public/hero/_check.jpg
-
 # локальные настройки Claude Code: пути конкретной машины
 .claude/settings.local.json

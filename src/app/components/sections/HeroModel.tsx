@@ -13,17 +13,17 @@ import { useReducedMotion } from "framer-motion";
    36 кадров по кругу, шаг 10°, фон снят. Крутим их на canvas —
    так нет ни мигания при подмене src, ни 36 растров в памяти. */
 
-const FRAMES = 36;
-const W = 384;
+const FRAMES = 72; // шаг 5°
+const W = 434;
 const H = 1000;
 
-/** каждый третий кадр грузим первым — крутить можно почти сразу */
-const FIRST_PASS = 3;
+/** каждый четвёртый кадр грузим первым — крутить можно почти сразу */
+const FIRST_PASS = 4;
 
 /** кадров за тик простоя: полный оборот примерно за 40 секунд */
-const IDLE_SPEED = 0.015;
+const IDLE_SPEED = 0.03;
 /** кадров на пиксель перетаскивания */
-const SENSITIVITY = 0.045;
+const SENSITIVITY = 0.09;
 /** затухание броска */
 const FRICTION = 0.92;
 
@@ -33,7 +33,13 @@ const wrap = (i: number) => ((i % FRAMES) + FRAMES) % FRAMES;
 
 const blockSelect = (e: Event) => e.preventDefault();
 
-export default function HeroModel({ active }: { active: boolean }) {
+type Props = {
+    active: boolean;
+    /** размеры и место в компоновке задаёт Hero */
+    className?: string;
+};
+
+export default function HeroModel({ active, className = "" }: Props) {
     const reduced = useReducedMotion();
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -176,12 +182,10 @@ export default function HeroModel({ active }: { active: boolean }) {
     };
 
     return (
-        /* С lg фигура стоит рядом с текстом и поднимается над ним, чтобы
-           ловить курсор: текстовый блок Hero растянут на всю секцию и
-           иначе перехватывал бы перетаскивание. На узких экранах она
-           остаётся фоновой фактурой позади текста и не кликается. */
+        /* Фигура стоит в общем потоке рядом с текстом, а не поверх него,
+           поэтому перехватывать чужие клики ей нечем. */
         <div
-            className="pointer-events-none absolute bottom-0 right-0 z-0 aspect-[384/1000] h-[58%] translate-x-[6%] opacity-40 sm:h-[68%] sm:translate-x-[2%] sm:opacity-55 lg:z-20 lg:h-[78%] lg:translate-x-0 lg:opacity-100 xl:h-[86%]"
+            className={`pointer-events-none relative aspect-[434/1000] shrink-0 ${className}`}
         >
             {/* Свечение под фигурой — иначе она выглядит наклеенной */}
             <div
@@ -207,9 +211,7 @@ export default function HeroModel({ active }: { active: boolean }) {
                 /* Ловим курсор только пока секция на экране: иначе гаснущий
                    Hero продолжал бы перехватывать перетаскивание */
                 className={`relative h-full w-full touch-pan-y select-none transition-opacity duration-700 ${
-                    active
-                        ? "pointer-events-none lg:pointer-events-auto"
-                        : "pointer-events-none"
+                    active ? "pointer-events-auto" : "pointer-events-none"
                 } ${ready ? "opacity-100" : "opacity-0"} ${
                     dragging ? "cursor-grabbing" : "cursor-grab"
                 }`}
