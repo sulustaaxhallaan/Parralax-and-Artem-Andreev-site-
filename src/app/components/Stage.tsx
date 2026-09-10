@@ -12,6 +12,7 @@ import { useStageScroll } from "@/lib/useStageScroll";
 
 import Background from "./Background";
 import FitToViewport from "./FitToViewport";
+import QuickContacts from "./QuickContacts";
 import SectionLayer from "./SectionLayer";
 import SectionNav from "./SectionNav";
 
@@ -21,6 +22,7 @@ import Skills from "./sections/Skills";
 import Journey from "./sections/Journey";
 import Cases from "./sections/Cases";
 import Results from "./sections/Results";
+import Process from "./sections/Process";
 import Contacts from "./sections/Contacts";
 
 /**
@@ -52,6 +54,8 @@ export default function Stage() {
                 return <Cases active={isActive} />;
             case "results":
                 return <Results active={isActive} />;
+            case "process":
+                return <Process active={isActive} />;
             case "contacts":
                 return <Contacts active={isActive} />;
         }
@@ -90,6 +94,7 @@ export default function Stage() {
             </div>
 
             <SectionNav active={active} onGo={goTo} />
+            <QuickContacts />
         </>
     );
 }

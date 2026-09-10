@@ -2,6 +2,8 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
+import { TEMPO } from "@/lib/motion";
+
 const TAGS = {
     p: motion.p,
     div: motion.div,
@@ -57,9 +59,9 @@ export default function RevealWords({
                             : { opacity: 0, y: "0.35em", filter: "blur(4px)" }
                     }
                     transition={{
-                        duration: 0.5,
+                        duration: 0.42,
                         ease: [0.22, 1, 0.36, 1],
-                        delay: active ? delay + i * step : 0,
+                        delay: active ? (delay + i * step) * TEMPO : 0,
                     }}
                 >
                     {word}

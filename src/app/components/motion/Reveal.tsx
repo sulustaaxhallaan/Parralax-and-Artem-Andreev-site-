@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
+import { TEMPO } from "@/lib/motion";
+
 type Props = {
     children: ReactNode;
     active: boolean;
@@ -33,9 +35,9 @@ export default function Reveal({
             initial={{ opacity: 0, y }}
             animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y }}
             transition={{
-                duration: 0.75,
+                duration: 0.55,
                 ease: [0.22, 1, 0.36, 1],
-                delay: active ? delay : 0,
+                delay: active ? delay * TEMPO : 0,
             }}
         >
             {children}

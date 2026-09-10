@@ -5,7 +5,8 @@ export type IconName =
     | "mail"
     | "instagram"
     | "whatsapp"
-    | "telegram";
+    | "telegram"
+    | "behance";
 
 const common = {
     fill: "none",
@@ -53,6 +54,18 @@ export default function Icon({
             {name === "telegram" && (
                 <>
                     <path d="M21 4.5 2.8 11.3l4.9 1.6L20 6l-9.6 8.5.4 4.6 2.6-3.4 4.3 3.1L21 4.5Z" />
+                </>
+            )}
+
+            {/* Знак Behance — «Bē»: две чаши буквы B и строчная e
+                с чертой над ней. Контуром, как остальные иконки. */}
+            {name === "behance" && (
+                <>
+                    <path d="M3.4 7h4.1a2.5 2.5 0 0 1 0 5H3.4V7" />
+                    <path d="M3.4 12h4.6a2.5 2.5 0 0 1 0 5H3.4v-5" />
+                    <path d="M14 7.6h6" />
+                    <path d="M13.6 13.6h6.8" />
+                    <path d="M20.4 13.6a3.4 3.4 0 1 0-1.1 2.5" />
                 </>
             )}
         </svg>

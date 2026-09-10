@@ -7,6 +7,44 @@ import TypeLine from "../motion/TypeLine";
 import RevealWords from "../motion/RevealWords";
 import Reveal from "../motion/Reveal";
 
+/**
+ * Раскладка коллажа: место и размер каждого объекта в процентах от
+ * контейнера (left и width — от ширины, top — от высоты), плюс
+ * порядок наложения.
+ *
+ * Раскладок две. Ширина колонки задана сеткой и не меняется, поэтому
+ * укрупнить объекты можно только за счёт высоты — а её хватает не
+ * всегда. На окне 1440x900 масштаб секции упирается в ширину кадра
+ * (1.125 против 1.205 по высоте), и запас по высоте там есть: секция
+ * может подрасти с 667 до 715px даром. На окне 720px высоты запаса
+ * нет вовсе, и вытянутый коллаж потянул бы за собой всю секцию — весь
+ * текст стал бы мельче процентов на пять.
+ *
+ * Поэтому порог по высоте окна: ниже 840px остаётся тесная квадратная
+ * раскладка, выше — вытянутая, где объекты крупнее примерно на пятую
+ * часть и разведены, а не свалены в стопку.
+ *
+ * Классы записаны целиком: Tailwind ищет их в исходнике простым
+ * поиском по тексту и не увидит имя, собранное из кусков.
+ *
+ * Поворот и тени объектам не задаём: и то и другое уже снято в самих
+ * png, добавлять поверх — только ломать перспективу.
+ */
+const PLACEMENT: Record<string, string> = {
+    poster:
+        "z-20 left-[0%] top-[3%] w-[37%] " +
+        "[@media(min-height:840px)]:left-[0%] [@media(min-height:840px)]:top-[0%] [@media(min-height:840px)]:w-[45%]",
+    certificate:
+        "z-10 left-[62%] top-[1%] w-[34%] " +
+        "[@media(min-height:840px)]:left-[56%] [@media(min-height:840px)]:top-[3%] [@media(min-height:840px)]:w-[41%]",
+    cards:
+        "z-30 left-[30%] top-[39%] w-[52%] " +
+        "[@media(min-height:840px)]:left-[34%] [@media(min-height:840px)]:top-[41%] [@media(min-height:840px)]:w-[63%]",
+    laptop:
+        "z-40 left-[12%] top-[48%] w-[76%] " +
+        "[@media(min-height:840px)]:left-[5%] [@media(min-height:840px)]:top-[58%] [@media(min-height:840px)]:w-[90%]",
+};
+
 export default function About({ active }: { active: boolean }) {
     return (
         <div className="grid w-full max-w-6xl gap-10 px-6 sm:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16">
@@ -58,18 +96,30 @@ export default function About({ active }: { active: boolean }) {
                 </Reveal>
             </div>
 
-            {/* На узких экранах картинка не помещается в кадр — визуальную
+            {/* На узких экранах коллаж не помещается в кадр — визуальную
                 часть там берут на себя кейсы */}
             <Reveal active={active} delay={0.5} y={30} className="hidden md:block">
-                <div className="glass relative overflow-hidden rounded-2xl p-2">
-                    <Image
-                        src={about.image.src}
-                        alt={about.image.alt}
-                        width={1469}
-                        height={906}
-                        priority
-                        className="h-auto w-full rounded-xl object-cover"
-                    />
+                {/* Стеклянной карточки под объектами больше нет: они
+                    вырезаны и лежат прямо на фоне сайта */}
+                {/* 1.42, а не больше: при 1.45 секция вырастала до 724px и
+                    масштаб начинал упираться в высоту вместо ширины — весь
+                    блок становился мельче, чего мы и добивались избежать */}
+                <div className="relative aspect-square w-full [@media(min-height:840px)]:aspect-[1/1.42]">
+                    {about.mockups.map((item) => (
+                        <div
+                            key={item.id}
+                            className={`absolute ${PLACEMENT[item.id]}`}
+                        >
+                            <Image
+                                src={item.src}
+                                alt={item.alt}
+                                width={item.w}
+                                height={item.h}
+                                sizes="(max-width: 1024px) 40vw, 32vw"
+                                className="h-auto w-full"
+                            />
+                        </div>
+                    ))}
                 </div>
             </Reveal>
         </div>

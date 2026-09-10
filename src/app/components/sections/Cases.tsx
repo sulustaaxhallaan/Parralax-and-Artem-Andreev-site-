@@ -12,6 +12,7 @@ import Image from "next/image";
 import { cases, type CaseItem } from "@/content/site";
 import TypeLine from "../motion/TypeLine";
 import Reveal from "../motion/Reveal";
+import Lightbox from "../Lightbox";
 
 /** насколько резко лента догоняет цель при прокрутке колесом */
 const EASE = 0.18;
@@ -26,12 +27,25 @@ const DRAG_THRESHOLD = 6;
  */
 const EDGE = 2;
 
+/**
+ * Размер карточки в ленте.
+ *
+ * Бокс у всех один и тот же, а работа вписывается внутрь целиком:
+ * иначе широкий логотип 3384×786 растянулся бы на пол-ленты рядом с
+ * квадратным. Обрезать нельзя — половина обложек это логотипы, у них
+ * поля часть композиции.
+ */
+const BOX = "w-[clamp(150px,34vh,520px)]";
+
 export default function Cases({ active }: { active: boolean }) {
     const railRef = useRef<HTMLDivElement>(null);
     const yearRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const [current, setCurrent] = useState(0);
     const [dragging, setDragging] = useState(false);
+
+    // Открытый кейс: какие работы показывать и с какой начали
+    const [view, setView] = useState<CaseItem | null>(null);
 
     // Плавная докрутка: колесо и клики по годам двигают не саму ленту,
     // а цель, к которой она подтягивается покадрово.
@@ -162,7 +176,13 @@ export default function Cases({ active }: { active: boolean }) {
 
     /* --- перетаскивание мышью.
        Палец не трогаем: на телефоне лента и так свайпается нативно. --- */
-    const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: 0 });
+    const drag = useRef({
+        active: false,
+        startX: 0,
+        startLeft: 0,
+        moved: 0,
+        captured: false,
+    });
 
     const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
         if (e.pointerType !== "mouse" || e.button !== 0) return;
@@ -175,9 +195,13 @@ export default function Cases({ active }: { active: boolean }) {
             startX: e.clientX,
             startLeft: el.scrollLeft,
             moved: 0,
+            captured: false,
         };
         setDragging(true);
-        el.setPointerCapture(e.pointerId);
+        /* Захват указателя здесь НЕ ставим. Пока палец (мышь) не сдвинулся,
+           это ещё может оказаться обычным кликом, а браузер уводит click
+           на элемент с захватом — карточка перестала бы открываться.
+           Ставим захват ниже, когда движение уже точно перетаскивание. */
     };
 
     const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -187,6 +211,14 @@ export default function Cases({ active }: { active: boolean }) {
 
         const dx = e.clientX - drag.current.startX;
         drag.current.moved = Math.max(drag.current.moved, Math.abs(dx));
+
+        // Перетаскивание началось — теперь захват нужен, иначе лента
+        // перестанет ехать, стоит курсору выйти за её пределы
+        if (!drag.current.captured && drag.current.moved > DRAG_THRESHOLD) {
+            drag.current.captured = true;
+            el.setPointerCapture(e.pointerId);
+        }
+
         el.scrollLeft = drag.current.startLeft - dx;
     };
 
@@ -194,7 +226,11 @@ export default function Cases({ active }: { active: boolean }) {
         if (!drag.current.active) return;
         drag.current.active = false;
         setDragging(false);
-        railRef.current?.releasePointerCapture(e.pointerId);
+
+        if (drag.current.captured) {
+            drag.current.captured = false;
+            railRef.current?.releasePointerCapture(e.pointerId);
+        }
     };
 
     // После перетаскивания не должен срабатывать клик по карточке
@@ -231,7 +267,7 @@ export default function Cases({ active }: { active: boolean }) {
                         text={cases.title}
                         speed={55}
                         delay={180}
-                        className="display block text-[clamp(1.7rem,4vw,3rem)]"
+                        className="display block text-[clamp(1.7rem,4vw,4rem)]"
                     />
 
                     <Reveal active={active} delay={0.9}>
@@ -282,7 +318,11 @@ export default function Cases({ active }: { active: boolean }) {
 
                             <div className="flex items-start gap-6">
                                 {group.items.map((item) => (
-                                    <CaseCard key={item.image} item={item} />
+                                    <CaseCard
+                                        key={item.shots[0].src}
+                                        item={item}
+                                        onOpen={() => setView(item)}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -322,35 +362,58 @@ export default function Cases({ active }: { active: boolean }) {
                         {/* На тачскрине про мышь писать незачем */}
                         <p className="mt-4 text-[0.66rem] tracking-[0.14em] text-ink-faint sm:text-[0.76rem] [@media(max-height:560px)]:mt-2 [@media(max-height:560px)]:text-[0.66rem]">
                             <span className="hidden [@media(hover:hover)]:inline">
-                                Тяните ленту мышью или крутите колесо над ней
+                                Тяните ленту мышью или крутите колесо над ней.
+                                Клик по работе — открыть в полном размере
                             </span>
                             <span className="[@media(hover:hover)]:hidden">
-                                Листайте ленту вбок
+                                Листайте ленту вбок. Нажмите на работу, чтобы
+                                увеличить
                             </span>
                         </p>
                     </div>
                 </Reveal>
             </div>
+
+            <Lightbox
+                shots={view?.shots ?? []}
+                index={view ? 0 : null}
+                title={view?.title ?? ""}
+                onClose={() => setView(null)}
+            />
         </div>
     );
 }
 
-function CaseCard({ item }: { item: CaseItem }) {
-    const card = (
-        <>
-            <div className="glass overflow-hidden rounded-xl p-1.5">
+function CaseCard({ item, onOpen }: { item: CaseItem; onOpen: () => void }) {
+    const cover = item.shots[0];
+    const more = item.shots.length;
+
+    return (
+        <button
+            type="button"
+            onClick={onOpen}
+            aria-label={`${item.title} — открыть в полном размере`}
+            className={`group shrink-0 text-left ${BOX}`}
+        >
+            <div className="glass relative aspect-square w-full overflow-hidden rounded-xl transition-colors duration-300 group-hover:border-[rgba(127,210,240,0.45)]">
                 <Image
-                    src={item.image}
+                    src={cover.src}
                     alt={item.title}
-                    width={item.w}
-                    height={item.h}
-                    sizes="(max-width: 768px) 70vw, 40vw"
+                    fill
+                    sizes="(max-width: 640px) 45vw, 400px"
                     draggable={false}
-                    className="h-[clamp(120px,34vh,420px)] w-auto rounded-lg object-cover"
+                    className="object-contain p-2.5 transition-transform duration-500 group-hover:scale-[1.03]"
                 />
+
+                {/* Сколько работ внутри — иначе не видно, что кейс не один кадр */}
+                {more > 1 ? (
+                    <span className="pointer-events-none absolute bottom-2 right-2 rounded-full border border-line bg-[rgba(3,6,13,0.72)] px-2 py-0.5 text-[0.62rem] tracking-[0.1em] text-ink-dim backdrop-blur-sm sm:text-[0.7rem]">
+                        {more}
+                    </span>
+                ) : null}
             </div>
 
-            <div className="mt-3.5 max-w-[34ch]">
+            <div className="mt-3.5">
                 <h3 className="text-[0.9rem] font-medium leading-5 text-accent sm:text-[1.02rem] sm:leading-6 [@media(max-height:560px)]:text-[0.9rem] [@media(max-height:560px)]:leading-5">
                     {item.title}
                 </h3>
@@ -360,20 +423,6 @@ function CaseCard({ item }: { item: CaseItem }) {
                     </p>
                 ) : null}
             </div>
-        </>
+        </button>
     );
-
-    // href появится, когда сделаешь страницы кейсов — тогда карточка станет ссылкой
-    if (item.href) {
-        return (
-            <a
-                href={item.href}
-                className="group block shrink-0 transition-opacity duration-300 hover:opacity-90"
-            >
-                {card}
-            </a>
-        );
-    }
-
-    return <article className="shrink-0">{card}</article>;
 }

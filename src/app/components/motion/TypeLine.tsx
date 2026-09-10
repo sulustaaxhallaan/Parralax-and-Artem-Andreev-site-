@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, type ElementType } from "react";
 import { useReducedMotion } from "framer-motion";
 
+import { TEMPO } from "@/lib/motion";
+
 type Props = {
     text: string;
     /** секция на экране — набор начинается, когда становится true */
@@ -45,10 +47,12 @@ export default function TypeLine({
         if (!active) return;
 
         let start: number | null = null;
+        const wait = delay * TEMPO;
+        const perChar = speed * TEMPO;
 
         const step = (now: number) => {
             if (start === null) start = now;
-            const elapsed = now - start - delay;
+            const elapsed = now - start - wait;
 
             if (elapsed < 0) {
                 setCount(0);
@@ -56,7 +60,7 @@ export default function TypeLine({
                 return;
             }
 
-            const next = Math.min(text.length, Math.floor(elapsed / speed));
+            const next = Math.min(text.length, Math.floor(elapsed / perChar));
             setCount(next);
 
             if (next < text.length) {

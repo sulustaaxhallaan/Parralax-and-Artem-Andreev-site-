@@ -1,29 +1,33 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { hero } from "@/content/site";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import TypeLine from "../motion/TypeLine";
 import Reveal from "../motion/Reveal";
-import HeroModel from "./HeroModel";
+
+/* Фигура нужна только широким окнам, поэтому её код и кадры туда же и
+   уезжают: телефон не скачивает ни то, ни другое. */
+const HeroModel = dynamic(() => import("./HeroModel"), { ssr: false });
 
 export default function Hero({ active }: { active: boolean }) {
     const reduced = useReducedMotion();
 
+    /* Тот же порог, что у lg в Tailwind. На телефоне фигура выходила
+       ростом в треть экрана и шириной в 90 пикселей: разглядеть в ней
+       фигуру нельзя, а внимание от заголовка она забирала — и вставала
+       не по центру колонки. Первый экран там отдан типографике. */
+    const wide = useMediaQuery("(min-width: 1024px)");
+
     return (
         <div className="relative h-full w-full overflow-hidden">
-            {/* До lg фигура стоит над текстом, с lg — справа от заголовка.
-                Крутится перетаскиванием, в покое поворачивается сама. */}
-            {/* Низкие окна (телефон боком) тоже уходят в строку: колонкой
-                фигура и текст туда не помещаются */}
-            <div className="mx-auto flex h-full w-full max-w-6xl flex-col items-center justify-center gap-5 px-6 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:gap-10 [@media(max-height:560px)]:flex-row [@media(max-height:560px)]:justify-between [@media(max-height:560px)]:gap-6">
-                <HeroModel
-                    active={active}
-                    className="order-first h-[30vh] sm:h-[34vh] lg:order-last lg:h-[68vh] xl:h-[76vh] [@media(max-height:560px)]:order-last [@media(max-height:560px)]:h-[72vh]"
-                />
-
-                <div className="w-full lg:flex-1 [@media(max-height:560px)]:flex-1">
-                    <div className="max-w-full sm:max-w-[34rem] lg:max-w-[36rem] xl:max-w-[41rem]">
+            <div className="mx-auto flex h-full w-full max-w-6xl flex-col items-center justify-center gap-5 px-6 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:gap-14">
+                <div className="w-full lg:flex-1">
+                    {/* @container — чтобы заголовок мерился по этой колонке,
+                        а не по ширине окна: см. комментарий у него самого */}
+                    <div className="@container max-w-full sm:max-w-[34rem] lg:max-w-[36rem] xl:max-w-[41rem]">
                         <Reveal active={active} delay={0.05} y={16}>
                             <p className="eyebrow">{hero.name}</p>
                         </Reveal>
@@ -34,7 +38,15 @@ export default function Hero({ active }: { active: boolean }) {
                             text={hero.role}
                             speed={55}
                             delay={280}
-                            className="display mt-6 block text-[clamp(1.7rem,4.6vw,4.6rem)] text-balance"
+                            /* Кегль считается от ширины КОЛОНКИ (cqw), а не окна
+                               (vw). «ГРАФИЧЕСКИЙ» — одно слово, переносить его
+                               некуда, и при размере от ширины окна оно вылезало
+                               из колонки и уходило под фигуру: на 1920 слово
+                               занимало 864px против 656px колонки. От колонки
+                               же оно не вылезет ни при какой ширине экрана.
+                               9.6cqw: слово шире кегля примерно в 9.8 раза,
+                               значит занимает ~94% колонки — с запасом. */
+                            className="display mt-6 block text-[clamp(1.7rem,9.6cqw,6rem)] text-balance"
                         />
 
                         <Reveal
@@ -59,7 +71,7 @@ export default function Hero({ active }: { active: boolean }) {
                             speed={20}
                             delay={1700}
                             caret={false}
-                            className="mt-6 block text-[clamp(0.9rem,1.9vw,1.45rem)] leading-relaxed tracking-[0.06em] text-ink"
+                            className="mt-6 block text-[clamp(0.9rem,1.9vw,1.9rem)] leading-relaxed tracking-[0.06em] text-ink"
                         />
 
                         {/* Подсказка о прокрутке — вся навигация строится на ней */}
@@ -84,6 +96,17 @@ export default function Hero({ active }: { active: boolean }) {
                         </Reveal>
                     </div>
                 </div>
+
+                {/* С xl фигура сдвинута в поле за контейнером — так между
+                    ней и заголовком больше воздуха. На lg сдвига нет:
+                    там контейнер уже во всю ширину, и рамка упиралась бы
+                    в боковую навигацию */}
+                {wide && (
+                    <HeroModel
+                        active={active}
+                        className="h-[76vh] xl:h-[84vh] xl:translate-x-[12%]"
+                    />
+                )}
             </div>
         </div>
     );

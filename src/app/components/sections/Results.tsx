@@ -16,17 +16,14 @@ import Reveal from "../motion/Reveal";
 export default function Results({ active }: { active: boolean }) {
     return (
         <div className="w-full max-w-5xl px-6 text-center sm:px-10">
-            <Reveal active={active} y={14}>
-                <p className="eyebrow">{results.eyebrow}</p>
-            </Reveal>
-
+            {/* Надзаголовка здесь нет: он дублировал бы сам заголовок */}
             <TypeLine
                 as="h2"
                 active={active}
                 text={results.title}
                 speed={65}
                 delay={200}
-                className="display mt-5 block text-[clamp(2rem,5.5vw,4rem)]"
+                className="display block text-[clamp(2rem,5.5vw,4rem)]"
             />
 
             <div className="mt-12 grid gap-x-10 gap-y-12 sm:grid-cols-2">

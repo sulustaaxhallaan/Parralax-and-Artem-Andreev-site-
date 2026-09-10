@@ -27,10 +27,39 @@ export const about = {
         "Учёт требований клиента, производства и среды использования",
         "Работа в чётких рамках дедлайнов",
     ],
-    image: {
-        src: "/cases/about-mockups.jpg",
-        alt: "Примеры работ: айдентика, макеты для соцсетей, полиграфия",
-    },
+    /* Объекты второго экрана. Каждый вырезан и лежит на прозрачном фоне,
+       поэтому собираются они не в картинке, а прямо в вёрстке — раскладка
+       и порядок наложения заданы в About.tsx. Порядок здесь роли не играет. */
+    mockups: [
+        {
+            id: "poster",
+            src: "/about/poster.webp",
+            alt: "Афиша фотостудии Lumen «Фотосессии в Якутске»",
+            w: 1198,
+            h: 1800,
+        },
+        {
+            id: "certificate",
+            src: "/about/certificate.webp",
+            alt: "Именной сертификат курсов косметического отбеливания",
+            w: 1476,
+            h: 1800,
+        },
+        {
+            id: "cards",
+            src: "/about/cards.webp",
+            alt: "Визитные карточки Travels By Soul — лицевая и оборотная стороны",
+            w: 1800,
+            h: 792,
+        },
+        {
+            id: "laptop",
+            src: "/about/laptop.webp",
+            alt: "Ноутбук с сайтом агентства «Панорама» и телефон с профилем Lumen",
+            w: 1800,
+            h: 1200,
+        },
+    ],
 };
 
 /* Заголовки групп — в том же регистре, что и во всём остальном сайте:
@@ -152,7 +181,7 @@ export const journey = {
         },
         {
             date: "Февраль 2022",
-            company: "MyTopa",
+            company: "MyTona",
             position: "Специалист по исследованию рынка, Competitive Research",
             points: [
                 "Исследование продуктов компаний-конкурентов",
@@ -162,15 +191,21 @@ export const journey = {
     ],
 };
 
-export type CaseItem = {
-    title: string;
-    description?: string;
-    image: string;
+export type CaseShot = {
+    src: string;
     /** натуральный размер картинки — нужен, чтобы не прыгала вёрстка */
     w: number;
     h: number;
-    /** ссылка на подробный кейс — подставь, когда будет страница */
-    href?: string;
+};
+
+export type CaseItem = {
+    title: string;
+    description?: string;
+    /**
+     * Работы кейса в полном размере. Первая служит обложкой в ленте,
+     * остальные открываются просмотрщиком по клику.
+     */
+    shots: CaseShot[];
 };
 
 export type CaseYear = {
@@ -194,9 +229,9 @@ export const cases = {
                     title: "Афиши мероприятий",
                     description:
                         "Star Wars Quiz, Video Game Quiz, «Назад в прошлое», #Valentine’s Dating — серия постеров для лофт-баров.",
-                    image: "/cases/2018-events.jpg",
-                    w: 1050,
-                    h: 1302,
+                    shots: [
+                        { src: "/cases/media/timeline/01.webp", w: 1751, h: 2200 },
+                    ],
                 },
             ],
         },
@@ -209,9 +244,9 @@ export const cases = {
                     title: "Полиграфия ДНК СВФУ",
                     description:
                         "Сертификаты, дипломы и информационные стенды образовательных программ.",
-                    image: "/cases/2019-dnk.jpg",
-                    w: 1038,
-                    h: 1074,
+                    shots: [
+                        { src: "/cases/media/timeline/02.webp", w: 2141, h: 2200 },
+                    ],
                 },
             ],
         },
@@ -224,17 +259,22 @@ export const cases = {
                     title: "Любительские арты",
                     description:
                         "Цифровая живопись и фотоманипуляции: северное сияние, ночные сцены, персонажи.",
-                    image: "/cases/2020-arts.jpg",
-                    w: 858,
-                    h: 1404,
+                    shots: [
+                        { src: "/cases/media/timeline/05.webp", w: 2200, h: 1243 },
+                        { src: "/cases/media/timeline/04.webp", w: 2200, h: 2173 },
+                        { src: "/cases/media/timeline/06.webp", w: 2200, h: 1236 },
+                        { src: "/cases/media/timeline/03.webp", w: 1668, h: 2200 },
+                    ],
                 },
                 {
                     title: "Превью для роликов",
                     description:
                         "Обложки для видео: сборка кадров, ретушь, световые эффекты.",
-                    image: "/cases/2020-previews.jpg",
-                    w: 1068,
-                    h: 1404,
+                    shots: [
+                        { src: "/cases/media/timeline/08.webp", w: 1471, h: 2200 },
+                        { src: "/cases/media/timeline/07.webp", w: 2200, h: 1641 },
+                        { src: "/cases/media/timeline/09.webp", w: 1205, h: 2200 },
+                    ],
                 },
             ],
         },
@@ -246,9 +286,10 @@ export const cases = {
                     title: "Мастер-классы «Наука 0+»",
                     description:
                         "Серия анонсов мастер-классов ДНК СВФУ и карточки товаров для магазинов.",
-                    image: "/cases/2021-social.jpg",
-                    w: 828,
-                    h: 1374,
+                    shots: [
+                        { src: "/cases/media/timeline/10.webp", w: 2165, h: 2200 },
+                        { src: "/cases/media/timeline/11.webp", w: 2200, h: 1484 },
+                    ],
                 },
             ],
         },
@@ -260,9 +301,12 @@ export const cases = {
                     title: "RE:AUTO и товарные карточки",
                     description:
                         "Рекламные макеты для автозвука, электроники и автотоваров.",
-                    image: "/cases/2022-social.jpg",
-                    w: 876,
-                    h: 1416,
+                    shots: [
+                        { src: "/cases/media/timeline/12.webp", w: 2200, h: 2196 },
+                        { src: "/cases/media/timeline/13.webp", w: 2200, h: 2190 },
+                        { src: "/cases/media/timeline/14.webp", w: 2200, h: 2177 },
+                        { src: "/cases/media/timeline/15.webp", w: 2200, h: 1467 },
+                    ],
                 },
             ],
         },
@@ -275,65 +319,99 @@ export const cases = {
                     title: "Lumen — логотип",
                     description:
                         "Знак фотостудии: камера-чемодан и объектив-диафрагма в одной линии.",
-                    image: "/cases/2023-lumen-logo.jpg",
-                    w: 726,
-                    h: 702,
+                    shots: [
+                        { src: "/cases/media/lumen/lumen-logo.webp", w: 1667, h: 2200 },
+                    ],
                 },
                 {
                     title: "Lumen — айдентика",
                     description:
                         "Цветовая палитра, фирменные носители, афиши и мокапы.",
-                    image: "/cases/2023-lumen-identity.jpg",
-                    w: 990,
-                    h: 816,
+                    shots: [
+                        { src: "/cases/media/lumen/04.webp", w: 2200, h: 1650 },
+                        { src: "/cases/media/lumen/02.webp", w: 2200, h: 1899 },
+                        { src: "/cases/media/lumen/01.webp", w: 1556, h: 2200 },
+                    ],
                 },
                 {
                     title: "Lumen — соцсети",
                     description:
                         "Сетка публикаций, рекламные креативы, оформление профиля.",
-                    image: "/cases/2023-lumen-social.jpg",
-                    w: 936,
-                    h: 1242,
+                    shots: [
+                        { src: "/cases/media/lumen/03.webp", w: 1237, h: 2200 },
+                        { src: "/cases/media/lumen/05.webp", w: 1466, h: 2200 },
+                        { src: "/cases/media/lumen/06.webp", w: 1651, h: 2200 },
+                    ],
                 },
                 {
                     title: "Полиграфия и сертификаты",
                     description:
                         "Меню, подарочные сертификаты, благодарственные письма для клиентов РПК.",
-                    image: "/cases/2023-print.jpg",
-                    w: 936,
-                    h: 1314,
+                    shots: [
+                        { src: "/cases/media/timeline/17.webp", w: 2200, h: 1559 },
+                        { src: "/cases/media/timeline/16.webp", w: 2200, h: 1541 },
+                        { src: "/cases/media/timeline/18.webp", w: 2200, h: 1554 },
+                        { src: "/cases/media/timeline/19.webp", w: 2200, h: 1557 },
+                        { src: "/cases/media/timeline/20.webp", w: 1557, h: 2200 },
+                        { src: "/cases/media/timeline/21.webp", w: 1557, h: 2200 },
+                        { src: "/cases/media/timeline/22.webp", w: 1556, h: 2200 },
+                        { src: "/cases/media/timeline/23.webp", w: 2200, h: 534 },
+                    ],
                 },
                 {
                     title: "Таблички и режимы работы",
                     description:
                         "«Земельный юрист», «Доктор-Офис», SUNNY, IZAKAYA, BODY SILK, ROLLS RICE.",
-                    image: "/cases/2023-signage.jpg",
-                    w: 1020,
-                    h: 1452,
+                    shots: [
+                        { src: "/cases/media/timeline/26.webp", w: 1650, h: 2200 },
+                        { src: "/cases/media/timeline/24.webp", w: 2200, h: 1652 },
+                        { src: "/cases/media/timeline/25.webp", w: 2045, h: 2200 },
+                        { src: "/cases/media/timeline/27.webp", w: 1764, h: 2200 },
+                        { src: "/cases/media/timeline/28.webp", w: 2200, h: 2113 },
+                        { src: "/cases/media/timeline/29.webp", w: 1760, h: 2200 },
+                        { src: "/cases/media/timeline/30.webp", w: 1636, h: 2200 },
+                    ],
                 },
                 {
                     title: "Наружная реклама",
                     description:
                         "Вывески, световые короба и объёмные буквы: «Полярный», «Ардагын», «Панорама».",
-                    image: "/cases/2023-outdoor.jpg",
-                    w: 1098,
-                    h: 1386,
+                    shots: [
+                        { src: "/cases/media/timeline/40.webp", w: 2200, h: 1889 },
+                        { src: "/cases/media/timeline/31.webp", w: 2200, h: 1256 },
+                        { src: "/cases/media/timeline/32.webp", w: 2200, h: 1650 },
+                        { src: "/cases/media/timeline/33.webp", w: 1590, h: 2200 },
+                        { src: "/cases/media/timeline/34.webp", w: 2200, h: 2039 },
+                        { src: "/cases/media/timeline/36.webp", w: 2200, h: 2039 },
+                        { src: "/cases/media/timeline/37.webp", w: 2200, h: 1675 },
+                        { src: "/cases/media/timeline/38.webp", w: 2200, h: 1652 },
+                        { src: "/cases/media/timeline/41.webp", w: 836, h: 2200 },
+                    ],
                 },
                 {
                     title: "Lobby Gaming Club",
                     description:
                         "Логотип и айдентика компьютерного клуба: прайсы, режим работы, оформление зала.",
-                    image: "/cases/2023-lobby.jpg",
-                    w: 1308,
-                    h: 606,
+                    shots: [
+                        { src: "/cases/media/lobby/01.webp", w: 2200, h: 1585 },
+                        { src: "/cases/media/lobby/logo-1.webp", w: 2118, h: 1829 },
+                        { src: "/cases/media/lobby/logo-2.webp", w: 2200, h: 489 },
+                        { src: "/cases/media/lobby/02.webp", w: 1556, h: 2200 },
+                        { src: "/cases/media/lobby/03.webp", w: 1556, h: 2200 },
+                        { src: "/cases/media/lobby/04.webp", w: 1651, h: 2200 },
+                        { src: "/cases/media/lobby/05.webp", w: 2200, h: 944 },
+                    ],
                 },
                 {
                     title: "«КИТ» — рыба и морепродукты",
                     description:
                         "Логотип магазина: текстовый блок и закруглённый дескриптор, между ними рыба над волнами.",
-                    image: "/cases/2023-kit.jpg",
-                    w: 1296,
-                    h: 450,
+                    shots: [
+                        { src: "/cases/media/kit/01.webp", w: 2200, h: 1467 },
+                        { src: "/cases/media/kit/logo.webp", w: 2200, h: 2199 },
+                        { src: "/cases/media/timeline/35.webp", w: 2200, h: 1289 },
+                        { src: "/cases/media/timeline/39.webp", w: 2200, h: 1289 },
+                    ],
                 },
             ],
         },
@@ -342,52 +420,57 @@ export const cases = {
             caption: "Пространство и бренды",
             items: [
                 {
-                    title: "Оформление офиса ГБУ РС(Я) РЦИТ",
-                    description:
-                        "Навигация, световой знак и историческая стена центра мониторинга ИБ.",
-                    image: "/cases/2024-rcit.jpg",
-                    w: 1098,
-                    h: 1386,
-                },
-                {
                     title: "Фасадная иллюминация «Японский дом»",
                     description:
                         "Световое оформление фасада комплекса и входных групп арендаторов.",
-                    image: "/cases/2024-japanese-house.jpg",
-                    w: 936,
-                    h: 942,
+                    shots: [
+                        { src: "/cases/media/timeline/43.webp", w: 2200, h: 1275 },
+                        { src: "/cases/media/timeline/42.webp", w: 2200, h: 939 },
+                    ],
                 },
                 {
                     title: "Чайхана 14",
                     description:
                         "Айдентика кафе восточной кухни: знак-силуэт, вывеска, уголок потребителя.",
-                    image: "/cases/2024-chaihana.jpg",
-                    w: 1104,
-                    h: 648,
+                    shots: [
+                        { src: "/cases/media/teahouse-14/03.webp", w: 2200, h: 1467 },
+                        { src: "/cases/media/teahouse-14/logo.webp", w: 2200, h: 1166 },
+                        { src: "/cases/media/teahouse-14/01.webp", w: 1656, h: 2200 },
+                        { src: "/cases/media/teahouse-14/02.webp", w: 1321, h: 2200 },
+                        { src: "/cases/media/teahouse-14/04.webp", w: 2200, h: 1101 },
+                    ],
                 },
                 {
                     title: "Lyubimoi",
                     description:
                         "Брендинг интернет-магазина одежды и аксессуаров: знак, палитра, упаковка, реклама.",
-                    image: "/cases/2024-lyubimoi.jpg",
-                    w: 1104,
-                    h: 618,
+                    shots: [
+                        { src: "/cases/media/lyubimoi/01.webp", w: 1485, h: 2200 },
+                        { src: "/cases/media/lyubimoi/logo.webp", w: 2044, h: 1800 },
+                        { src: "/cases/media/lyubimoi/02.webp", w: 2200, h: 1277 },
+                        { src: "/cases/media/lyubimoi/03.webp", w: 2200, h: 1449 },
+                        { src: "/cases/media/lyubimoi/04.webp", w: 2180, h: 2181 },
+                    ],
                 },
                 {
                     title: "PRO NAIL",
                     description:
                         "Брендинг мастерской красивых и здоровых ногтей: палитра, баннер, полиграфия.",
-                    image: "/cases/2024-pronail.jpg",
-                    w: 1008,
-                    h: 648,
+                    shots: [
+                        { src: "/cases/media/pro-nail/01.webp", w: 2200, h: 1451 },
+                        { src: "/cases/media/pro-nail/logo.webp", w: 2200, h: 515 },
+                        { src: "/cases/media/pro-nail/02.webp", w: 2200, h: 1569 },
+                        { src: "/cases/media/pro-nail/03.webp", w: 2200, h: 1574 },
+                    ],
                 },
                 {
                     title: "«Топаз» и PS ROOM",
                     description:
                         "Логотип парикмахерской и оформление вывесок.",
-                    image: "/cases/2024-topaz.jpg",
-                    w: 1104,
-                    h: 444,
+                    shots: [
+                        { src: "/cases/media/topaz/02.webp", w: 2200, h: 1251 },
+                        { src: "/cases/media/topaz/01.webp", w: 1987, h: 2200 },
+                    ],
                 },
             ],
         },
@@ -400,17 +483,25 @@ export const cases = {
                     title: "Знак и печатные материалы",
                     description:
                         "Логотип, орнаментальная эмблема, литературная карта города Якутска, стенды и книги.",
-                    image: "/cases/2025-sakha-print.jpg",
-                    w: 960,
-                    h: 1284,
+                    shots: [
+                        { src: "/cases/media/sakhakabinet/logo.webp", w: 2200, h: 1063 },
+                        { src: "/cases/media/sakhakabinet/01.webp", w: 2004, h: 2008 },
+                        { src: "/cases/media/sakhakabinet/03.webp", w: 2200, h: 1738 },
+                        { src: "/cases/media/sakhakabinet/04.webp", w: 2200, h: 1642 },
+                    ],
                 },
                 {
                     title: "Система оформления кабинета",
                     description:
                         "Интерьеры, цветовая система на основе природных материалов, шрифтовые пары и пиктограммы.",
-                    image: "/cases/2025-sakha-system.jpg",
-                    w: 1338,
-                    h: 1338,
+                    shots: [
+                        { src: "/cases/media/sakhakabinet/05.webp", w: 2200, h: 1498 },
+                        { src: "/cases/media/sakhakabinet/02.webp", w: 2200, h: 1615 },
+                        { src: "/cases/media/sakhakabinet/06.webp", w: 2200, h: 1454 },
+                        { src: "/cases/media/sakhakabinet/07.webp", w: 2200, h: 739 },
+                        { src: "/cases/media/sakhakabinet/08.webp", w: 2200, h: 461 },
+                        { src: "/cases/media/sakhakabinet/09.webp", w: 2200, h: 453 },
+                    ],
                 },
             ],
         },
@@ -421,26 +512,33 @@ export const cases = {
                 {
                     title: "«Игры Игрушки» и «Дари»",
                     description:
-                        "Логотипы магазина игрушек с якутским орнаментом и салона «Всё для праздника».",
-                    image: "/cases/2026-brands.jpg",
-                    w: 1284,
-                    h: 444,
+                        "Логотипы для магзинов",
+                    shots: [
+                        { src: "/cases/media/timeline/52.webp", w: 2200, h: 1286 },
+                        { src: "/cases/media/timeline/53.webp", w: 2200, h: 1566 },
+                    ],
                 },
                 {
                     title: "Проектные постеры",
                     description:
                         "Оформление школьных проектов: «Молодой боец», «День Байаная», «Кыыс Ньургун».",
-                    image: "/cases/2026-projects.jpg",
-                    w: 1284,
-                    h: 864,
+                    shots: [
+                        { src: "/cases/media/timeline/49.webp", w: 1098, h: 2200 },
+                        { src: "/cases/media/timeline/50.webp", w: 1094, h: 2200 },
+                        { src: "/cases/media/timeline/51.webp", w: 1101, h: 2200 },
+                    ],
                 },
                 {
                     title: "Полиграфия и афиши",
                     description:
                         "«Киви деливери», «Рассада», спортивные наборы, якутский календарь месяцев.",
-                    image: "/cases/2026-print.jpg",
-                    w: 918,
-                    h: 1506,
+                    shots: [
+                        { src: "/cases/media/timeline/45.webp", w: 1733, h: 2200 },
+                        { src: "/cases/media/timeline/44.webp", w: 1028, h: 2200 },
+                        { src: "/cases/media/timeline/46.webp", w: 2200, h: 843 },
+                        { src: "/cases/media/timeline/47.webp", w: 2191, h: 2200 },
+                        { src: "/cases/media/timeline/48.webp", w: 2198, h: 2200 },
+                    ],
                 },
             ],
         },
@@ -448,7 +546,6 @@ export const cases = {
 };
 
 export const results = {
-    eyebrow: "Мои результаты",
     title: "Мои результаты",
     items: [
         { prefix: "Более", value: "1000", label: "довольных клиентов" },
@@ -458,10 +555,46 @@ export const results = {
     ],
 };
 
+export const process = {
+    eyebrow: "Как я работаю",
+    title: "План работы",
+    /** закрывающая строка под дорожной картой */
+    promise: "Полное сопровождение от задумки до реализации",
+    steps: [
+        {
+            title: "Первичный контакт",
+            text: "Обсуждаем задачу, формат проекта, сроки и ожидания. Определяем, подхожу ли я под задачу и как могу быть максимально полезен.",
+        },
+        {
+            title: "Брифинг и анализ",
+            text: "Уточняю цели проекта, аудиторию, технические требования и ограничения производства. Анализирую контекст и задачи клиента.",
+        },
+        {
+            title: "Формирование концепции",
+            text: "Предлагаю визуальное направление и идеи, основанные на задаче и брифе. Согласовываем общее направление проекта.",
+        },
+        {
+            title: "Дизайн и проработка деталей",
+            text: "Разрабатываю дизайн, уделяя внимание композиции, читаемости, деталям и будущей реализации.",
+        },
+        {
+            title: "Согласование и правки",
+            text: "Вношу правки в рамках согласованного объёма, доводя проект до финального утверждения.",
+        },
+        {
+            title: "Подготовка к производству",
+            text: "Адаптирую макеты под технические требования печати, монтажа или цифрового использования.",
+        },
+        {
+            title: "Сдача проекта",
+            text: "Передаю готовые файлы в нужных форматах и сопровождаю проект при необходимости.",
+        },
+    ],
+};
+
 /* ------------------------------------------------------------------
    КОНТАКТЫ.
    href уже проставлены — правь их здесь, если что-то поменяется.
-   Для WhatsApp и Telegram подставь свои адреса вместо TODO.
 ------------------------------------------------------------------ */
 export const contacts = {
     eyebrow: "Контакты",
@@ -483,19 +616,53 @@ export const contacts = {
             icon: "mail" as const,
         },
         {
-            id: "instagram",
-            label: "Instagram",
-            value: "@this_is_andreev_",
-            href: "https://www.instagram.com/this_is_andreev_/",
-            icon: "instagram" as const,
+            id: "behance",
+            label: "Behance",
+            value: "@artemandreev17",
+            href: "https://www.behance.net/artemandreev17",
+            icon: "behance" as const,
+        },
+    ],
+    /* Эти иконки видны на всех секциях — панель QuickContacts.
+       Порядок = порядок на панели. */
+    quick: [
+        {
+            id: "phone",
+            label: "Позвонить",
+            href: "tel:+79969147516",
+            icon: "phone" as const,
+        },
+        {
+            id: "telegram",
+            label: "Telegram",
+            href: "https://t.me/nomorepills7",
+            icon: "telegram" as const,
+        },
+        {
+            id: "whatsapp",
+            label: "WhatsApp",
+            href: "https://wa.me/79969147516",
+            icon: "whatsapp" as const,
+        },
+        {
+            id: "behance",
+            label: "Behance",
+            href: "https://www.behance.net/artemandreev17",
+            icon: "behance" as const,
+        },
+        {
+            id: "mail",
+            label: "Почта",
+            href: "mailto:knox711@mail.ru",
+            icon: "mail" as const,
         },
     ],
     socials: [
         {
-            id: "instagram",
-            label: "Instagram",
-            href: "https://www.instagram.com/this_is_andreev_/",
-            icon: "instagram" as const,
+            id: "behance",
+            label: "Behance",
+            href: "https://www.behance.net/artemandreev17",
+            icon: "behance" as const,
         },
         {
             id: "mail",
@@ -513,8 +680,7 @@ export const contacts = {
         {
             id: "telegram",
             label: "Telegram",
-            // TODO: подставь свой ник в Telegram
-            href: "https://t.me/",
+            href: "https://t.me/nomorepills7",
             icon: "telegram" as const,
         },
     ],

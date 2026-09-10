@@ -1,15 +1,15 @@
 """Нарезает поворотную ленту для первого экрана из видео с моделью.
 
-Исходник — 360°-оборот на чистом чёрном фоне (фон снят заранее).
+Исходник — оборот на тёмно-синем фоне. Фон НЕ вырезается: он почти
+совпадает с фоном сайта, а мягкую границу даёт CSS-маска в HeroModel.
 
-Просто резать по яркости нельзя: на персонаже чёрный пиджак и штаны,
-местами они темнее порога. Поэтому силуэт собирается отдельно — крупная
-связная область плюс заливка замкнутых пустот, — а мягкость краёв берётся
-из яркости. Цвет на полупрозрачных краях домножен на альфу самим
-кодеком, поэтому его надо разделить обратно, иначе по контуру
-останется тёмная кайма.
+Главная тонкость — скорость вращения в исходнике неравномерная
+(в замерах разброс больше чем в десять раз: местами фигура почти стоит,
+местами летит). Поэтому кадры выбираются равномерно НЕ по времени,
+а по накопленному изменению картинки, то есть примерно по углу.
+Иначе при перетаскивании лента дёргалась бы.
 
-Результат — public/hero/turn/f00..fNN.webp с прозрачностью.
+Результат — public/hero/turn/f000..fNNN.webp
 """
 
 import os
@@ -17,47 +17,61 @@ import os
 import cv2
 import numpy as np
 from PIL import Image
-from scipy import ndimage
 
-SRC = r"C:\Users\Anvil\Downloads\0811\0811.mp4"
+SRC = r"C:\Users\Anvil\Downloads\0811(1)\0811(1).mp4"
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "hero", "turn")
 
-FRAMES = 72          # шаг 5°: заметно плавнее, чем 36
-TARGET_H = 1000
-QUALITY = 76
-PAD = 6
+# В обороте исходника 292 кадра, и скорость неравномерная. После
+# выравнивания по углу 180 — предел, на котором кадры ещё почти все
+# различны: при 240 дублей уже 13%, при 360 — 30%, то есть треть файлов
+# весит впустую и плавности не добавляет. Больше можно будет взять
+# только с видео, снятого на равномерной скорости и подлиннее.
+FRAMES = 180         # шаг 2°
+TARGET_H = 800
+QUALITY = 72
 
-# Замеры по исходнику: фон вдали от фигуры ровно 0, звон компрессии
-# вокруг силуэта не превышает 3, а тёмная одежда местами опускается до 2.
-# Отсюда порог: всё выше 1.5 считаем фигурой. Порог выше отрезал бы часть
-# пиджака и штанов — именно так появлялись рваные края.
-CORE_LEVEL = 1.5
+# где искать конец полного оборота (в кадрах исходника)
+PERIOD_MIN, PERIOD_MAX = 250, 360
+
+# Обрезка по фигуре, в координатах исходника (x0, y0, x1, y1).
+# Подобрана по кадрам: фигура не выходит за неё ни в одном ракурсе.
+# Чем меньше в кадре пустого фона, тем меньше он выдаёт себя тёмным
+# прямоугольником на светлых участках фона страницы.
+# Если поменяешь видео — проверь рамку заново.
+CROP = (150, 40, 570, 1230)
 
 
-def matte(frame):
-    """Возвращает (rgb, alpha) для кадра на чёрном фоне."""
-    f = frame.astype(np.float32)
-    lum = f.max(axis=2)
+def load_small(cap, size=(240, 420)):
+    frames = []
+    while True:
+        ok, f = cap.read()
+        if not ok:
+            break
+        frames.append(cv2.resize(f, size).astype(np.float32))
+    return frames
 
-    core = (lum > CORE_LEVEL).astype(np.uint8)
-    core = cv2.morphologyEx(core, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
 
-    n, lab, stats, _ = cv2.connectedComponentsWithStats(core, 8)
-    if n > 1:
-        core = (lab == 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])).astype(np.uint8)
-    core = ndimage.binary_fill_holes(core.astype(bool)).astype(np.uint8)
-    core = cv2.morphologyEx(core, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+def find_period(small):
+    """Кадр, на котором фигура возвращается в исходное положение."""
+    ref = small[0]
+    best, best_v = None, 1e9
+    for j in range(PERIOD_MIN, min(len(small), PERIOD_MAX)):
+        v = np.abs(small[j] - ref).mean()
+        if v < best_v:
+            best, best_v = j, v
+    return best, best_v
 
-    # По яркости отличить «край с половинным покрытием» от «сплошной
-    # чёрный пиджак» невозможно, поэтому силуэт берём бинарным и лишь
-    # слегка растушёвываем. Настоящее сглаживание даст уменьшение
-    # кадра: 449 px исходника ужимаются до 384.
-    alpha = np.clip(cv2.GaussianBlur(core.astype(np.float32), (0, 0), 0.7), 0, 1)
 
-    # Цвет намеренно оставляем как есть. Кодек домножил края на покрытие,
-    # но фон сайта тёмно-синий, и чуть притемнённая кромка на нём
-    # незаметна — в отличие от ошибок деления на неточную альфу.
-    return np.clip(f, 0, 255).astype(np.uint8), alpha
+def pick_by_angle(small, period):
+    """Индексы кадров с равным шагом по накопленному движению."""
+    step = np.array(
+        [np.abs(small[i + 1] - small[i]).mean() for i in range(period)]
+    )
+    cum = np.concatenate([[0.0], np.cumsum(step)])
+    targets = np.linspace(0, cum[-1], FRAMES, endpoint=False)
+    # обратная интерполяция: какому кадру соответствует нужный «угол»
+    idx = np.interp(targets, cum, np.arange(period + 1))
+    return [int(round(v)) % period for v in idx], step
 
 
 def main():
@@ -67,42 +81,48 @@ def main():
             os.remove(os.path.join(OUT, old))
 
     cap = cv2.VideoCapture(SRC)
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    small = load_small(cap)
+    cap.release()
+    print(f"в видео {len(small)} кадров")
 
-    # Последний кадр повторяет нулевой, поэтому период на один короче
-    period = total - 1
-    picks = [round(i * period / FRAMES) for i in range(FRAMES)]
-    print(f"в видео {total} кадров, берём {len(picks)}: шаг {360 / FRAMES:.1f}°")
+    period, err = find_period(small)
+    print(f"полный оборот: кадры 0..{period} (совпадение с началом {err:.2f})")
 
-    cuts = []
-    for idx in picks:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-        ok, frame = cap.read()
+    picks, step = pick_by_angle(small, period)
+    uniq = len(set(picks))
+    print(f"берём {FRAMES} кадров, различных исходных {uniq}")
+    print(f"скорость в исходнике: мин {step.min():.2f}, макс {step.max():.2f}")
+
+    gaps = np.diff(sorted(set(picks)))
+    print(f"шаг по исходнику: от {gaps.min()} до {gaps.max()} кадров")
+
+    # читаем подряд и держим только нужные: seek по 360 позициям медленный
+    need = sorted(set(picks))
+    cap = cv2.VideoCapture(SRC)
+    store, i, k = {}, 0, 0
+    while k < len(need):
+        ok, f = cap.read()
         if not ok:
-            raise RuntimeError(f"кадр {idx} не прочитался")
-        cuts.append(matte(frame))
+            break
+        if i == need[k]:
+            store[i] = f
+            k += 1
+        i += 1
     cap.release()
 
-    # Общая рамка на все кадры: по отдельности фигура прыгала бы
-    ys, xs = [], []
-    for _, a in cuts:
-        yy, xx = np.where(a > 0.15)
-        ys += [yy.min(), yy.max()]
-        xs += [xx.min(), xx.max()]
-    h0, w0 = cuts[0][1].shape
-    y0, y1 = max(0, min(ys) - PAD), min(h0, max(ys) + PAD)
-    x0, x1 = max(0, min(xs) - PAD), min(w0, max(xs) + PAD)
-    print(f"общая рамка: {x1 - x0}x{y1 - y0}")
+    h, w = store[need[0]].shape[:2]
+    x0, y0, x1, y1 = CROP
+    print(f"обрезка: {x1 - x0}x{y1 - y0} из {w}x{h}")
 
     out_w = round((x1 - x0) * TARGET_H / (y1 - y0))
     total_kb = 0
-    for i, (rgb, alpha) in enumerate(cuts):
-        rgba = np.dstack([rgb[..., ::-1], (alpha * 255).astype(np.uint8)])
-        im = Image.fromarray(rgba[y0:y1, x0:x1], "RGBA")
-        im = im.resize((out_w, TARGET_H), Image.LANCZOS)
-        path = os.path.join(OUT, f"f{i:02d}.webp")
-        im.save(path, "WEBP", quality=QUALITY, method=6)
-        total_kb += os.path.getsize(path) // 1024
+    for j, src_i in enumerate(picks):
+        im = Image.fromarray(store[src_i][y0:y1, x0:x1, ::-1]).resize(
+            (out_w, TARGET_H), Image.LANCZOS
+        )
+        path = os.path.join(OUT, f"f{j:03d}.webp")
+        im.save(path, "WEBP", quality=QUALITY, method=4)
+        total_kb += os.path.getsize(path) / 1024
 
     print(f"готово: {FRAMES} кадров {out_w}x{TARGET_H}, всего {total_kb / 1024:.2f} МБ")
     print(f"пропорция для вёрстки: {out_w}/{TARGET_H}")

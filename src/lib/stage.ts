@@ -14,7 +14,7 @@
    Хочешь, чтобы секция «стояла» дольше — увеличь её hold.
 ================================================================== */
 
-export const FADE = 0.75;
+export const FADE = 0.6;
 
 export type SectionId =
     | "hero"
@@ -23,6 +23,7 @@ export type SectionId =
     | "journey"
     | "cases"
     | "results"
+    | "process"
     | "contacts";
 
 export type SectionSpec = {
@@ -33,16 +34,22 @@ export type SectionSpec = {
     hold: number;
 };
 
+/* Запас подобран так, чтобы секцию успевали прочитать, но прокрутка
+   не казалась залипшей: примерно один экран на секцию. Дольше держатся
+   только те, где реально много содержимого. */
 export const SECTIONS: SectionSpec[] = [
-    { id: "hero", label: "Начало", hold: 0.9 },
-    { id: "about", label: "Обо мне", hold: 1.5 },
-    { id: "skills", label: "Компетенции", hold: 1.6 },
-    { id: "journey", label: "Мой путь", hold: 1.6 },
+    { id: "hero", label: "Начало", hold: 0.7 },
+    { id: "about", label: "Обо мне", hold: 1 },
+    { id: "skills", label: "Компетенции", hold: 1.1 },
+    { id: "journey", label: "Мой путь", hold: 1.1 },
     // Лента кейсов крутится сама по себе (колесо над ней, перетаскивание,
     // свайп), поэтому вертикальной прокрутки ей нужно не больше обычного
-    { id: "cases", label: "Кейсы", hold: 2.2 },
-    { id: "results", label: "Результаты", hold: 1.2 },
-    { id: "contacts", label: "Контакты", hold: 2.2 },
+    { id: "cases", label: "Кейсы", hold: 1.5 },
+    { id: "results", label: "Результаты", hold: 0.9 },
+    // Стоит перед контактами: человек уже видел работы и результат,
+    // дальше логично показать, как пойдёт работа, — и сразу форма
+    { id: "process", label: "План работы", hold: 1.2 },
+    { id: "contacts", label: "Контакты", hold: 1.6 },
 ];
 
 export type SectionWindow = SectionSpec & {

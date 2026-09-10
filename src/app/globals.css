@@ -92,6 +92,40 @@ body {
   }
 }
 
+/* Появление просмотрщика работ.
+   Анимируется только масштаб, прозрачность не трогаем совсем.
+   Причина: и Framer Motion, и CSS-анимации идут по таймеру кадров, а он
+   останавливается, когда страница не отрисовывается (вкладка в фоне,
+   энергосбережение). Застрявший кадр с opacity: 0 означал бы невидимое
+   окно, которое при этом перекрывает сайт и блокирует прокрутку.
+   Со scale застревать безопасно: видно и работает в любой момент. */
+.lightbox-in {
+  animation: lightbox-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lightbox-shot {
+  animation: lightbox-shot 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes lightbox-in {
+  from {
+    transform: scale(1.012);
+  }
+}
+
+@keyframes lightbox-shot {
+  from {
+    transform: scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox-in,
+  .lightbox-shot {
+    animation: none;
+  }
+}
+
 /* Тонкие скроллбары внутри карточек */
 .thin-scroll::-webkit-scrollbar {
   height: 6px;
