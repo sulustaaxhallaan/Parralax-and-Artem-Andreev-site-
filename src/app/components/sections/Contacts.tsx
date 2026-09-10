@@ -5,12 +5,15 @@ import Icon from "../Icons";
 import TypeLine from "../motion/TypeLine";
 import RevealWords from "../motion/RevealWords";
 import Reveal from "../motion/Reveal";
-import FeedbackForm from "./FeedbackForm";
 
 export default function Contacts({ active }: { active: boolean }) {
     return (
         <div className="w-full max-w-6xl px-6 sm:px-10">
-            <div className="grid gap-6 sm:gap-10 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-16">
+            {/* Раньше секция была в две колонки: контакты и форма обратной
+                связи. Формы больше нет, и вторая колонка вместе с ней —
+                иначе содержимое прижималось бы к левой половине кадра.
+                Блок закрывает сайт, поэтому стоит по центру. */}
+            <div className="mx-auto max-w-xl">
                 <div>
                     <Reveal active={active} y={14}>
                         <p className="eyebrow">{contacts.eyebrow}</p>
@@ -110,10 +113,6 @@ export default function Contacts({ active }: { active: boolean }) {
                         </p>
                     </Reveal>
                 </div>
-
-                <Reveal active={active} delay={0.8} y={30}>
-                    <FeedbackForm />
-                </Reveal>
             </div>
         </div>
     );

@@ -686,27 +686,6 @@ export const contacts = {
     ],
 };
 
-export const feedback = {
-    title: "Обратная связь",
-    lead: "Опишите проект в двух словах — я вернусь с предложением.",
-    /**
-     * Пусто → форма откроет почтовый клиент с заполненным письмом.
-     * Впиши сюда URL обработчика (Formspree, Getform, свой /api/contact),
-     * и форма начнёт отправлять POST с JSON { name, contact, message }.
-     */
-    endpoint: "",
-    mailTo: "knox711@mail.ru",
-    fields: {
-        name: { label: "Как вас зовут", placeholder: "Имя" },
-        contact: { label: "Как связаться", placeholder: "Телефон, почта или @ник" },
-        message: { label: "О проекте", placeholder: "Что нужно сделать" },
-    },
-    submit: "Отправить",
-    sending: "Отправляем…",
-    success: "Спасибо! Сообщение отправлено — отвечу в ближайшее время.",
-    error: "Не получилось отправить. Напишите напрямую: knox711@mail.ru",
-};
-
 export const footer = {
     note: `© ${new Date().getFullYear()} Андреев Артём · parralax_art`,
 };
