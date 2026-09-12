@@ -1,6 +1,8 @@
 "use client";
 
-import { contacts, footer } from "@/content/site";
+import Link from "next/link";
+
+import { contacts, footer, pricesLink } from "@/content/site";
 import Icon from "../Icons";
 import TypeLine from "../motion/TypeLine";
 import RevealWords from "../motion/RevealWords";
@@ -107,7 +109,17 @@ export default function Contacts({ active }: { active: boolean }) {
                         </ul>
                     </Reveal>
 
-                    <Reveal active={active} delay={2.2} className="mt-5 sm:mt-8">
+                    <Reveal active={active} delay={2.05} className="mt-5 sm:mt-8">
+                        <Link
+                            href={pricesLink.href}
+                            className="inline-flex items-center gap-2.5 rounded-full border border-[rgba(127,210,240,0.45)] px-5 py-2.5 text-[0.78rem] uppercase tracking-[0.2em] text-accent transition-all duration-300 hover:-translate-y-0.5 hover:border-accent hover:bg-[rgba(127,210,240,0.08)] sm:px-6 sm:py-3 sm:text-[0.86rem]"
+                        >
+                            <Icon name="price" className="h-[17px] w-[17px]" />
+                            {pricesLink.label}
+                        </Link>
+                    </Reveal>
+
+                    <Reveal active={active} delay={2.3} className="mt-5 sm:mt-8">
                         <p className="text-[0.68rem] tracking-[0.12em] text-ink-faint sm:text-[0.78rem]">
                             {footer.note}
                         </p>

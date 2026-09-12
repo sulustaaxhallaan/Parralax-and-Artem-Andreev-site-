@@ -67,16 +67,10 @@ export default function Skills({ active }: { active: boolean }) {
                 <ul className="flex flex-wrap gap-1.5 sm:gap-2">
                     {skills.stack.map((tool) => (
                         <li
-                            key={tool.label}
-                            /* Акцентный тег берёт те же цвета, что и кнопка
-                               формы, — отдельного стиля не заводим */
-                            className={`rounded-full border px-2.5 py-1 text-[0.65rem] tracking-[0.06em] sm:px-4 sm:py-1.5 sm:text-[0.82rem] sm:tracking-[0.08em] ${
-                                tool.accent
-                                    ? "border-[rgba(127,210,240,0.45)] bg-[rgba(127,210,240,0.08)] text-accent"
-                                    : "border-line text-ink-dim"
-                            }`}
+                            key={tool}
+                            className="rounded-full border border-line px-2.5 py-1 text-[0.65rem] tracking-[0.06em] text-ink-dim sm:px-4 sm:py-1.5 sm:text-[0.82rem] sm:tracking-[0.08em]"
                         >
-                            {tool.label}
+                            {tool}
                         </li>
                     ))}
                 </ul>

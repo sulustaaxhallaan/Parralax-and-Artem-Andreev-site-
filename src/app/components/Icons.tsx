@@ -6,7 +6,8 @@ export type IconName =
     | "instagram"
     | "whatsapp"
     | "telegram"
-    | "behance";
+    | "behance"
+    | "price";
 
 const common = {
     fill: "none",
@@ -54,6 +55,15 @@ export default function Icon({
             {name === "telegram" && (
                 <>
                     <path d="M21 4.5 2.8 11.3l4.9 1.6L20 6l-9.6 8.5.4 4.6 2.6-3.4 4.3 3.1L21 4.5Z" />
+                </>
+            )}
+
+            {/* Ценник: бирка с отверстием под шнурок. Рубль внутрь не
+                ставим — на 24 пикселях он сливается в пятно. */}
+            {name === "price" && (
+                <>
+                    <path d="M20.6 12.4 12.5 20.5a1.6 1.6 0 0 1-2.3 0l-6.7-6.7a1.6 1.6 0 0 1-.5-1.1V4.6c0-.9.7-1.6 1.6-1.6h8.1c.4 0 .8.2 1.1.5l6.8 6.8a1.6 1.6 0 0 1 0 2.1Z" />
+                    <circle cx="8.1" cy="8.1" r="1.4" />
                 </>
             )}
 

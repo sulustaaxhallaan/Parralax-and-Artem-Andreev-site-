@@ -136,21 +136,21 @@ export const skills = {
             ],
         },
     ],
-    /* accent — тег подсвечивается акцентным цветом. Так видно, что ИИ
-       здесь полноценный инструмент, а не приписка в конце списка. */
+    /* Все теги равнозначны. Раньше «Generative AI» подсвечивался, но
+       заливка с рамкой читались как кнопка, и его пытались нажать. */
     stack: [
-        { label: "Adobe Photoshop" },
-        { label: "Adobe Illustrator" },
-        { label: "Adobe InDesign" },
-        { label: "CorelDRAW" },
-        { label: "Figma" },
-        { label: "Blender" },
-        { label: "Framer Motion" },
-        { label: "Next.js" },
-        { label: "Generative AI", accent: true },
-        { label: "AI Video" },
-        { label: "Print Production" },
-    ] satisfies { label: string; accent?: boolean }[],
+        "Adobe Photoshop",
+        "Adobe Illustrator",
+        "Adobe InDesign",
+        "CorelDRAW",
+        "Figma",
+        "Blender",
+        "Framer Motion",
+        "Next.js",
+        "Generative AI",
+        "AI Video",
+        "Print Production",
+    ],
 };
 
 export const journey = {
@@ -592,6 +592,13 @@ export const process = {
     ],
 };
 
+/* Ссылка на прайс. Ведёт на отдельную страницу /prices, содержимое
+   которой лежит в content/prices.ts. */
+export const pricesLink = {
+    label: "Узнать цены",
+    href: "/prices",
+};
+
 /* ------------------------------------------------------------------
    КОНТАКТЫ.
    href уже проставлены — правь их здесь, если что-то поменяется.
@@ -626,6 +633,12 @@ export const contacts = {
     /* Эти иконки видны на всех секциях — панель QuickContacts.
        Порядок = порядок на панели. */
     quick: [
+        {
+            id: "prices",
+            label: "Узнать цены",
+            href: "/prices",
+            icon: "price" as const,
+        },
         {
             id: "phone",
             label: "Позвонить",

@@ -1,10 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { hero } from "@/content/site";
+import { hero, pricesLink } from "@/content/site";
 import { useMediaQuery } from "@/lib/useMediaQuery";
+import Icon from "../Icons";
 import TypeLine from "../motion/TypeLine";
 import Reveal from "../motion/Reveal";
 
@@ -74,8 +76,18 @@ export default function Hero({ active }: { active: boolean }) {
                             className="mt-6 block text-[clamp(0.9rem,1.9vw,1.9rem)] leading-relaxed tracking-[0.06em] text-ink"
                         />
 
+                        <Reveal active={active} delay={2.45} className="mt-9">
+                            <Link
+                                href={pricesLink.href}
+                                className="inline-flex items-center gap-2.5 rounded-full border border-[rgba(127,210,240,0.45)] px-5 py-2.5 text-[0.78rem] uppercase tracking-[0.2em] text-accent transition-all duration-300 hover:-translate-y-0.5 hover:border-accent hover:bg-[rgba(127,210,240,0.08)] sm:px-6 sm:py-3 sm:text-[0.86rem]"
+                            >
+                                <Icon name="price" className="h-[17px] w-[17px]" />
+                                {pricesLink.label}
+                            </Link>
+                        </Reveal>
+
                         {/* Подсказка о прокрутке — вся навигация строится на ней */}
-                        <Reveal active={active} delay={2.6} className="mt-12">
+                        <Reveal active={active} delay={2.75} className="mt-7">
                             <div className="flex items-center gap-4 text-ink-faint">
                                 <span className="text-[0.65rem] uppercase tracking-[0.35em] sm:text-[0.75rem]">
                                     {hero.scrollHint}
