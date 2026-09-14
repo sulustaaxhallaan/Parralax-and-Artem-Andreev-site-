@@ -1,92 +1,121 @@
+import Image from "next/image";
 import Link from "next/link";
 
-/* Развилка на входе. Своей палитры у неё нет — берёт значения по
-   умолчанию из :root, чтобы не принадлежать ни одному из сайтов. */
+/* Развилка на входе.
+   Каждая половина обёрнута в скоуп своего сайта — .site-design и
+   .site-web, — поэтому берёт его настоящую палитру, шрифты и .display.
+   Человек видит язык сайта ещё до перехода, а не два одинаковых
+   прямоугольника с разным текстом.
 
-const ROUTES = [
-    {
-        href: "/design",
-        eyebrow: "Направление 01",
-        title: "Графический дизайн",
-        lead: "Брендинг, наружная реклама, полиграфия и дизайн-код. Визуальная среда, которую ежедневно видят тысячи людей.",
-        items: ["Логотипы и фирменный стиль", "Вывески и городская среда", "Полиграфия и производство"],
-    },
-    {
-        href: "/web",
-        eyebrow: "Направление 02",
-        title: "Parralax Art",
-        lead: "Сайты со скролл-анимациями. Не шаблон, а живое интерактивное присутствие бизнеса в сети.",
-        items: ["Индивидуальный дизайн", "Скролл-анимации", "Рабочий прототип вместо картинки"],
-    },
-];
+   На телефоне половины ложатся друг под друга, каждая в полэкрана. */
 
 export default function Home() {
     return (
-        <main className="relative min-h-screen overflow-hidden">
-            {/* Фон развилки: те же свечения, что у обоих сайтов, но ровно
-                посередине по настроению — ни холоднее, ни теплее */}
+        <main className="flex min-h-[100svh] flex-col lg:h-[100svh] lg:flex-row lg:overflow-hidden">
+            {/* Имя поверх обеих половин: общее для сайтов, поэтому
+                не принадлежит ни одному из скоупов */}
+            <p className="pointer-events-none absolute left-1/2 top-5 z-20 -translate-x-1/2 text-[0.6rem] uppercase tracking-[0.42em] text-ink-faint sm:top-7 sm:text-[0.7rem]">
+                Артём Андреев
+            </p>
+
+            <Half
+                href="/design"
+                scope="site-design"
+                title="Графический дизайн"
+                lead="Брендинг, наружная реклама, полиграфия и дизайн-код"
+            />
+
+            <Half
+                href="/web"
+                scope="site-web"
+                title="Parralax Art"
+                lead="Сайты со скролл-анимациями"
+                image="/images/space/planets.webp"
+            />
+        </main>
+    );
+}
+
+function Half({
+    href,
+    scope,
+    title,
+    lead,
+    image,
+}: {
+    href: string;
+    scope: "site-design" | "site-web";
+    title: string;
+    lead: string;
+    image?: string;
+}) {
+    const design = scope === "site-design";
+
+    return (
+        <Link
+            href={href}
+            className={`${scope} group relative flex min-h-[50svh] flex-1 items-end overflow-hidden border-line transition-[flex-grow] duration-500 ease-out lg:min-h-0 lg:items-center lg:hover:grow-[1.35] ${
+                design ? "border-b lg:border-b-0 lg:border-r" : ""
+            }`}
+        >
+            {/* Фон половины. У портфолио — его холодное свечение,
+                у Parralax — настоящий кадр с его же сайта. */}
+            {image ? (
+                <>
+                    <Image
+                        src={image}
+                        alt=""
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        className="object-cover opacity-70 transition-transform duration-700 ease-out group-hover:scale-105"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(3,5,12,0.55),rgba(1,2,6,0.88))]" />
+                </>
+            ) : (
+                <div
+                    className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
+                    style={{
+                        background:
+                            "radial-gradient(circle at 30% 25%, rgba(34,211,238,0.16), transparent 26rem), radial-gradient(circle at 78% 82%, rgba(29,78,216,0.20), transparent 30rem), linear-gradient(150deg, #03060d 0%, #050b18 60%, #02050a 100%)",
+                    }}
+                />
+            )}
+
+            {/* Диагональная штриховка — тот же приём, что на фоне
+                портфолио: связывает развилку с сайтами */}
             <div
                 aria-hidden
-                className="pointer-events-none fixed inset-0 -z-10"
+                className="absolute inset-0 opacity-[0.22]"
                 style={{
-                    background:
-                        "radial-gradient(circle at 20% 12%, rgba(34,211,238,0.10), transparent 28rem), radial-gradient(circle at 82% 78%, rgba(47,155,255,0.10), transparent 32rem), linear-gradient(150deg, #03060d 0%, #050b18 55%, #02050a 100%)",
+                    backgroundImage:
+                        "linear-gradient(115deg, transparent 0 48%, rgba(127,210,240,0.35) 48% calc(48% + 1px), transparent calc(48% + 1px) 100%)",
+                    backgroundSize: "190px 190px",
                 }}
             />
 
-            <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-6 py-16 sm:px-10">
-                <header className="max-w-2xl">
-                    <p className="text-[0.7rem] uppercase tracking-[0.42em] text-ink-faint sm:text-[0.78rem]">
-                        Артём Андреев
-                    </p>
-                    <h1 className="mt-4 text-[clamp(1.7rem,4.5vw,3.2rem)] font-light leading-tight text-ink">
-                        Графический дизайн и сайты
-                    </h1>
-                    <p className="mt-4 text-[0.95rem] leading-[1.7] text-ink-dim sm:text-[1.05rem]">
-                        Два направления работы. Выберите, что вам нужно, —
-                        каждое живёт своим сайтом.
-                    </p>
-                </header>
+            <div className="relative z-10 w-full px-7 py-14 sm:px-12 lg:px-14 lg:py-0">
+                <p className="eyebrow">
+                    {design ? "Направление 01" : "Направление 02"}
+                </p>
 
-                <div className="mt-10 grid gap-4 sm:mt-14 sm:gap-6 lg:grid-cols-2">
-                    {ROUTES.map((route) => (
-                        <Link
-                            key={route.href}
-                            href={route.href}
-                            className="group flex flex-col rounded-2xl border border-line bg-[rgba(10,21,38,0.5)] p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(127,210,240,0.55)] hover:bg-[rgba(12,29,49,0.6)] sm:p-8"
-                        >
-                            <p className="text-[0.68rem] uppercase tracking-[0.28em] text-accent sm:text-[0.74rem]">
-                                {route.eyebrow}
-                            </p>
+                <h2
+                    className={`display mt-4 text-[clamp(1.9rem,6.5vw,3.6rem)] lg:text-[clamp(2rem,3.4vw,4rem)] ${
+                        design ? "display-wrap" : ""
+                    }`}
+                >
+                    {title}
+                </h2>
 
-                            <h2 className="mt-3 text-[clamp(1.35rem,3vw,2rem)] font-light leading-tight text-ink">
-                                {route.title}
-                            </h2>
+                <p className="mt-4 max-w-[30ch] text-[0.9rem] leading-[1.7] text-ink-dim sm:text-[1rem]">
+                    {lead}
+                </p>
 
-                            <p className="mt-3 text-[0.88rem] leading-[1.7] text-ink-dim sm:text-[0.95rem]">
-                                {route.lead}
-                            </p>
-
-                            <ul className="mt-5 grid gap-2 text-[0.82rem] text-ink-faint sm:text-[0.88rem]">
-                                {route.items.map((item) => (
-                                    <li key={item} className="relative pl-4">
-                                        <span
-                                            aria-hidden
-                                            className="absolute left-0 top-[0.62em] h-[5px] w-[5px] rounded-full bg-accent"
-                                        />
-                                        {item}
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <span className="mt-6 inline-flex items-center gap-2 text-[0.78rem] uppercase tracking-[0.2em] text-accent transition-transform duration-300 group-hover:translate-x-1 sm:mt-8 sm:text-[0.84rem]">
-                                Смотреть
-                                <span aria-hidden>→</span>
-                            </span>
-                        </Link>
-                    ))}
-                </div>
+                <span className="mt-7 inline-flex items-center gap-2.5 border-b border-[color:var(--accent)] pb-1 text-[0.72rem] uppercase tracking-[0.24em] text-accent transition-all duration-300 group-hover:gap-4 sm:mt-9 sm:text-[0.8rem]">
+                    Смотреть
+                    <span aria-hidden>→</span>
+                </span>
             </div>
-        </main>
+        </Link>
     );
 }
