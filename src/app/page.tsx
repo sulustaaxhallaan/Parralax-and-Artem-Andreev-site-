@@ -30,7 +30,7 @@ export default function Home() {
                 scope="site-web"
                 title="Parralax Art"
                 lead="Сайты со скролл-анимациями"
-                image="/images/space/planets.webp"
+                image="/images/space/starfield.webp"
             />
         </main>
     );
@@ -62,15 +62,18 @@ function Half({
                 у Parralax — настоящий кадр с его же сайта. */}
             {image ? (
                 <>
+                    {/* Звёздное небо само по себе почти чёрное, поэтому
+                        не приглушаем его, а затемняем только низ — там
+                        лежит текст */}
                     <Image
                         src={image}
                         alt=""
                         fill
                         sizes="(max-width: 1024px) 100vw, 60vw"
-                        className="object-cover opacity-70 transition-transform duration-700 ease-out group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         priority
                     />
-                    <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(3,5,12,0.55),rgba(1,2,6,0.88))]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(170deg,rgba(3,5,12,0.25),rgba(1,2,6,0.72))]" />
                 </>
             ) : (
                 <div
@@ -81,18 +84,6 @@ function Half({
                     }}
                 />
             )}
-
-            {/* Диагональная штриховка — тот же приём, что на фоне
-                портфолио: связывает развилку с сайтами */}
-            <div
-                aria-hidden
-                className="absolute inset-0 opacity-[0.22]"
-                style={{
-                    backgroundImage:
-                        "linear-gradient(115deg, transparent 0 48%, rgba(127,210,240,0.35) 48% calc(48% + 1px), transparent calc(48% + 1px) 100%)",
-                    backgroundSize: "190px 190px",
-                }}
-            />
 
             <div className="relative z-10 w-full px-7 py-14 sm:px-12 lg:px-14 lg:py-0">
                 <p className="eyebrow">
