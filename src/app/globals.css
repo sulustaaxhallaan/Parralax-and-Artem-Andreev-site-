@@ -1,10 +1,72 @@
 @import "tailwindcss";
 
-/* ------------------------------------------------------------------
-   Палитра взята с черновика: глубокий сине-чёрный фон, холодные
-   голубые свечения, светло-циановый текст заголовков.
------------------------------------------------------------------- */
+/* ==================================================================
+   ДВА САЙТА В ОДНОМ ПРОЕКТЕ.
+
+   /design — портфолио графического дизайнера
+   /web    — Parralax Art, веб-дизайн
+
+   У них своя палитра, свои шрифты и свои значения для одних и тех же
+   классов: .display, .eyebrow, .shell, .glass. Поэтому токены живут не
+   в :root, а на обёртке сайта — .site-design и .site-web, — которую
+   ставит layout соответствующего маршрута.
+
+   Слой утилит при этом один на оба. Tailwind из `--color-ink: var(--ink)`
+   генерирует `.text-ink { color: var(--ink) }`, то есть подставляет
+   ПЕРЕМЕННУЮ, а не значение. Внутри обёртки она уже переопределена,
+   и text-ink сам берёт нужный цвет. Дублировать утилиты не нужно.
+================================================================== */
+
 :root {
+  /* Значения по умолчанию — на случай разметки вне обёрток (экран
+     выбора на «/»). Совпадают с палитрой портфолио. */
+  --bg: #03060d;
+  --ink: #e8f1f8;
+  --ink-dim: #e2ecf5;
+  --ink-faint: #a8bccf;
+  --accent: #bfe4f5;
+  --line: rgba(159, 179, 200, 0.18);
+
+  /* Шрифт выбирается через эту прослойку: сами файлы грузит
+     корневой layout, а какой из них «основной» — решает обёртка. */
+  --font-site-display: var(--font-kharkiv);
+  --font-site-sans: var(--font-geist-sans);
+}
+
+@theme inline {
+  --font-display: var(--font-site-display);
+  --font-sans: var(--font-site-sans);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-line: var(--line);
+  /* Только у Parralax — конфликта нет, поэтому в общем слое */
+  --color-brand: var(--brand);
+  --color-tier-start: var(--tier-start);
+  --color-tier-orbit: var(--tier-orbit);
+  --color-tier-cosmos: var(--tier-cosmos);
+}
+
+/* Фон html задан значением, а не токеном: токены объявлены на
+   обёртке, внутри body, и до html не достают. Оба сайта почти черные
+   (#03060d и #03050c), и для «резинки» за краем страницы разницы нет. */
+html {
+  background: #03060d;
+  scroll-behavior: auto;
+}
+
+body {
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------------
+   САЙТ 1. Портфолио графического дизайнера.
+   Палитра с черновика: глубокий сине-чёрный фон, холодные голубые
+   свечения, светло-циановый текст заголовков.
+------------------------------------------------------------------ */
+.site-design {
   --bg: #03060d;
   --bg-deep: #050b18;
   --ink: #e8f1f8;
@@ -20,34 +82,18 @@
   --glow-blue: #1d4ed8;
   --glow-cyan: #22d3ee;
   --glow-deep: #0b3a6f;
-}
 
-@theme inline {
-  --font-display: var(--font-kharkiv);
-  --font-sans: var(--font-geist-sans);
-  --color-ink: var(--ink);
-  --color-ink-dim: var(--ink-dim);
-  --color-ink-faint: var(--ink-faint);
-  --color-accent: var(--accent);
-  --color-line: var(--line);
-}
+  --font-site-display: var(--font-kharkiv);
+  --font-site-sans: var(--font-geist-sans);
 
-html {
-  background: var(--bg);
-  /* Скролл ведёт всю анимацию — плавность важнее «резинки» */
-  scroll-behavior: auto;
-}
-
-body {
-  /* Фон рисует компонент Background — свой фон здесь перекрыл бы его */
+  /* Фон рисует компонент Background — сплошной цвет здесь перекрыл бы
+     его, поэтому только цвет текста и шрифт */
   color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
 }
 
 /* Заголовки в стиле черновика: широкий трекинг, тонкие формы */
-.display {
+.site-design .display {
   font-family: var(--font-kharkiv), var(--font-geist-sans), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -58,13 +104,13 @@ body {
 /* Тот же набор, но для заголовков, которые переносятся на несколько
    строк. У .display интерлиньяж 0.95 — он рассчитан на одну короткую
    строку, а на телефоне «СОЦСЕТИ И DIGITAL» ложится в две, и они
-   слипаются. Объявлен после .display и потому перебивает его: оба
-   класса вне слоёв Tailwind, решает порядок в файле. */
-.display-wrap {
+   слипаются. Объявлен после .display и с той же специфичностью —
+   решает порядок в файле. */
+.site-design .display-wrap {
   line-height: 1.14;
 }
 
-.eyebrow {
+.site-design .eyebrow {
   font-size: 0.7rem;
   letter-spacing: 0.42em;
   text-transform: uppercase;
@@ -73,8 +119,160 @@ body {
 
 /* На больших экранах есть запас по высоте — там текст крупнее */
 @media (min-width: 640px) {
-  .eyebrow {
+  .site-design .eyebrow {
     font-size: 0.78rem;
+  }
+}
+
+/* Стекло для карточек кейсов */
+.site-design .glass {
+  background: linear-gradient(
+    160deg,
+    rgba(20, 38, 66, 0.55),
+    rgba(6, 14, 28, 0.5)
+  );
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+}
+
+/* Колонка прайса. На широких мониторах 1180px — это 61% кадра на 1920
+   и 46% на 2560, всё остальное пустые поля. Раздвигаем ступенями:
+   строкам прайса лишняя ширина идёт только на пользу, а описания и так
+   ограничены своим max-width, так что длина строки не разъезжается. */
+.site-design .shell {
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+@media (max-width: 580px) {
+  .site-design .shell {
+    width: min(1180px, calc(100% - 28px));
+  }
+}
+
+@media (min-width: 1600px) {
+  .site-design .shell {
+    width: min(1440px, calc(100% - 80px));
+  }
+}
+
+@media (min-width: 2000px) {
+  .site-design .shell {
+    width: min(1680px, calc(100% - 96px));
+  }
+}
+
+/* ------------------------------------------------------------------
+   САЙТ 2. Parralax Art.
+   Космическая палитра: глубокий сине-чёрный фон на всём сайте,
+   акценты тарифов — неоновый зелёный / циан / красный.
+------------------------------------------------------------------ */
+.site-web {
+  --bg: #03050c;
+  --bg-deep: #010206;
+  --ink: #eef4fb;
+  --ink-dim: #c3d1e2;
+  --ink-faint: #7c8ba0;
+  --accent: #7fd2f0;
+  /* Электрический синий надписи бренда */
+  --brand: #2f9bff;
+  /* Цвета блока вопросов — сняты с макета */
+  --faq-title: #99ff99;
+  --faq-question: #00ffff;
+  --line: rgba(159, 179, 200, 0.16);
+
+  --tier-start: #c8f169;
+  --tier-orbit: #4dd8ff;
+  --tier-cosmos: #ff4d4d;
+
+  --font-site-display: var(--font-bebas);
+  --font-site-sans: var(--font-body);
+
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Bebas — узкий капительный гротеск: у него одно начертание, поэтому
+   вес не задаём, а межбуквенное чуть раскрываем — в плотном наборе
+   заголовок иначе читается сплошной полосой. */
+.site-web .display {
+  font-family: var(--font-bebas), var(--font-body), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.92;
+}
+
+.site-web .eyebrow {
+  font-family: var(--font-bebas), sans-serif;
+  font-size: clamp(0.9rem, 1.1vw, 1.15rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.site-web .glass {
+  background: linear-gradient(
+    160deg,
+    rgba(20, 38, 66, 0.5),
+    rgba(4, 10, 22, 0.55)
+  );
+  border: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+
+/* Общая ширина контента. На широких мониторах поля раньше съедали
+   треть экрана — теперь колонка тянется почти во всю ширину, а поля
+   растут плавно вместе с окном. */
+.site-web .shell {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 108rem;
+  padding-inline: clamp(1.25rem, 4vw, 5rem);
+}
+
+/* Слева закреплена панель контактов — освобождаем под неё поле,
+   иначе она ложится поверх текста. */
+@media (min-width: 1024px) {
+  .site-web .shell {
+    padding-left: max(clamp(1.25rem, 4vw, 5rem), 104px);
+  }
+}
+
+/* ------------------------------------------------------------------
+   ОБЩЕЕ. Классы, имена которых у сайтов не пересекаются, — держим
+   в одном месте, дублировать их по скоупам незачем.
+------------------------------------------------------------------ */
+
+/* Основной текст Parralax крупнее: на макете он читается с расстояния */
+.body-lg {
+  font-size: clamp(1.05rem, 1.35vw, 1.5rem);
+  line-height: 1.6;
+}
+
+.body-xl {
+  font-size: clamp(1.2rem, 1.7vw, 1.85rem);
+  line-height: 1.5;
+}
+
+/* Реиспользуемый fade-in-on-scroll: IntersectionObserver переключает
+   data-visible, CSS делает переход. Дешевле, чем гонять GSAP на
+   каждый параграф — ScrollTrigger оставлен для сквозного сценария. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition-delay: var(--reveal-delay, 0s);
+}
+.reveal[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 
@@ -130,7 +328,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .lightbox-in,
-  .lightbox-shot {
+  .lightbox-shot,
+  .caret::after {
     animation: none;
   }
 }
@@ -155,57 +354,7 @@ body {
   display: none;
 }
 
-/* Стекло для карточек кейсов и формы */
-.glass {
-  background: linear-gradient(
-    160deg,
-    rgba(20, 38, 66, 0.55),
-    rgba(6, 14, 28, 0.5)
-  );
-  border: 1px solid var(--line);
-  backdrop-filter: blur(6px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .caret::after {
-    animation: none;
-  }
-}
-
-/* ------------------------------------------------------------------
-   ПРАЙС. Обычная длинная страница, в отличие от сцены портфолио.
------------------------------------------------------------------- */
-
-/* Общая колонка страницы: как .shell в исходном макете прайса */
-.shell {
-  width: min(1180px, calc(100% - 40px));
-  margin-inline: auto;
-}
-
-@media (max-width: 580px) {
-  .shell {
-    width: min(1180px, calc(100% - 28px));
-  }
-}
-
-/* На широких мониторах 1180px — это 61% кадра на 1920 и 46% на 2560,
-   всё остальное пустые поля. Раздвигаем ступенями: строкам прайса
-   лишняя ширина идёт только на пользу — название, срок и цена
-   перестают тесниться, — а описания и так ограничены своим max-width,
-   так что длина строки в знаках не разъезжается. */
-@media (min-width: 1600px) {
-  .shell {
-    width: min(1440px, calc(100% - 80px));
-  }
-}
-
-@media (min-width: 2000px) {
-  .shell {
-    width: min(1680px, calc(100% - 96px));
-  }
-}
-
-/* Прокрутка страницы ведёт анимацию портфолио, поэтому глобально она
+/* Прокрутка портфолио ведёт его анимацию, поэтому глобально она
    резкая. Прайсу же нужна плавность и отступ под липкой шапкой, иначе
    заголовок категории уезжает под неё. Включаем только на этой
    странице — по наличию её корня в документе. */
