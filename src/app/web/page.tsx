@@ -1,3 +1,4 @@
+import BackHome from "../components/BackHome";
 import SpaceJourney from "./components/SpaceJourney";
 import SocialRail from "./components/SocialRail";
 import SceneBackdrop from "./components/SceneBackdrop";
@@ -19,6 +20,10 @@ export default function Home() {
     <main className="relative">
       <SpaceJourney />
       <SocialRail />
+
+      {/* С 1024px слева стоит панель соцсетей шириной 72px —
+          отодвигаем кнопку, чтобы не легла поверх неё */}
+      <BackHome className="lg:left-[88px]" />
 
       {/* Кадр с планетами: включается, как только камера вошла в экран
           ноутбука, и держится до появления телефона. */}

@@ -1,3 +1,4 @@
+import BackHome from "../components/BackHome";
 import DesignSite from "./components/DesignSite";
 import MobileSite from "./components/mobile/MobileSite";
 
@@ -18,6 +19,8 @@ import MobileSite from "./components/mobile/MobileSite";
 export default function Home() {
     return (
         <main className="relative">
+            {/* Стоит снаружи DesignSite: нужна в обеих версиях */}
+            <BackHome />
             <DesignSite mobile={<MobileSite />} />
         </main>
     );

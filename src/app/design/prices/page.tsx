@@ -131,20 +131,38 @@ function PageBackground() {
 function Topbar() {
     return (
         <header className="sticky top-0 z-20 border-b border-line bg-[rgba(3,6,13,0.82)] backdrop-blur-lg">
-            <div className="shell flex min-h-[4.375rem] items-center justify-between gap-5">
-                {/* Ссылка ведёт на портфолио: прайс открывают оттуда,
-                    но на него может прийти и прямая ссылка */}
-                <Link
-                    href="/design"
-                    className="group flex items-center gap-3 text-ink transition-colors duration-300 hover:text-accent"
-                >
-                    <span className="display grid h-[34px] w-[34px] place-items-center rounded-full border border-[rgba(127,210,240,0.34)] text-[0.75rem] tracking-[0.08em] text-accent">
-                        AA
+            <div className="shell flex min-h-[4.375rem] items-center justify-between gap-4">
+                {/* Путь наверх в два шага: к портфолио и к развилке
+                    направлений. Плавающей кнопки здесь нет — она легла
+                    бы прямо на эту шапку. */}
+                <nav className="flex min-w-0 items-center gap-2 sm:gap-3">
+                    {/* На телефоне подпись скрыта: втроём ссылки не
+                        помещались и «К портфолио» обрезалось на середине.
+                        Значок остаётся ссылкой, название — в aria-label. */}
+                    <Link
+                        href="/design"
+                        aria-label={pricesPage.backToSite}
+                        className="group flex shrink-0 items-center gap-2.5 text-ink transition-colors duration-300 hover:text-accent sm:gap-3"
+                    >
+                        <span className="display grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full border border-[rgba(127,210,240,0.34)] text-[0.75rem] tracking-[0.08em] text-accent">
+                            AA
+                        </span>
+                        <span className="display hidden text-[0.8rem] uppercase tracking-[0.13em] sm:inline sm:text-[0.92rem]">
+                            {pricesPage.backToSite}
+                        </span>
+                    </Link>
+
+                    <span aria-hidden className="text-ink-faint">
+                        ·
                     </span>
-                    <span className="display text-[0.8rem] uppercase tracking-[0.13em] sm:text-[0.92rem]">
-                        {pricesPage.backToSite}
-                    </span>
-                </Link>
+
+                    <Link
+                        href="/"
+                        className="display shrink-0 text-[0.8rem] uppercase tracking-[0.13em] text-ink-faint transition-colors duration-300 hover:text-accent sm:text-[0.92rem]"
+                    >
+                        Направления
+                    </Link>
+                </nav>
 
                 <a
                     href="#contact"
