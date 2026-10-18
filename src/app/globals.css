@@ -384,3 +384,324 @@ html:has(.prices-root) {
     scroll-behavior: auto;
   }
 }
+
+/* ------------------------------------------------------------------
+   ОТКРЫТКА ко Дню отца и Дню матери в Якутии (/otkrytka).
+   Палитра — из макета автора: бордовый половины матери, синий половины
+   отца и фиолетовый общей семьи. Кадр масштабируется целиком: в
+   портрете это сетка 400×860, в альбомной ориентации — макет 1440×960.
+------------------------------------------------------------------ */
+html:has(.oc-root) {
+  background: #663399;
+}
+
+.oc-root {
+  --oc-mother: #69090d;
+  --oc-father: #003399;
+  --oc-family: #663399;
+  --s: min(100vw / 400, 100dvh / 860);
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--oc-family);
+  color: #fff;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.oc-root[data-phase="idle"] {
+  cursor: pointer;
+}
+
+.oc-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+}
+
+.oc-half-mother {
+  top: 0;
+  background: var(--oc-mother);
+}
+
+.oc-half-father {
+  bottom: 0;
+  background: var(--oc-father);
+}
+
+/* Шов: тонкий свет на стыке двух половин */
+.oc-seam,
+.oc-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.85) 30%,
+    #fff 50%,
+    rgba(255, 255, 255, 0.85) 70%,
+    transparent
+  );
+  box-shadow: 0 0 18px 3px rgba(255, 255, 255, 0.45);
+}
+
+.oc-seam {
+  opacity: 0.55;
+  animation: oc-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes oc-breathe {
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.oc-merge {
+  position: absolute;
+  inset: 0;
+  background: var(--oc-family);
+}
+
+.oc-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 120vmax;
+  margin: -60vmax 0 0 -60vmax;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.55) 8%,
+    rgba(214, 190, 255, 0.25) 22%,
+    transparent 46%
+  );
+}
+
+.oc-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(400 * var(--s));
+  height: calc(860 * var(--s));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.oc-el {
+  position: absolute;
+  left: calc(var(--px) * var(--s));
+  top: calc(var(--py) * var(--s));
+  width: calc(var(--pw) * var(--s));
+  height: auto;
+  max-width: none;
+  will-change: transform, opacity;
+}
+
+.oc-only-l {
+  display: none;
+}
+
+/* Общий оберег в макете нарисован полупрозрачными линиями — так и оставляем */
+.oc-family .oc-amulet {
+  opacity: 0.5;
+}
+
+.oc-hint,
+.oc-replay {
+  position: absolute;
+  left: 50%;
+  /* Отдельное свойство translate, а не transform: transform двигает GSAP */
+  translate: -50% 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.oc-hint {
+  top: 50%;
+  margin-top: -26px;
+  padding: 0;
+}
+
+.oc-hint:disabled,
+.oc-replay:disabled {
+  pointer-events: none;
+}
+
+/* Кнопка — два полукруга, которые тянутся друг к другу */
+.oc-hint-ring {
+  position: relative;
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.oc-hint-ring::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  animation: oc-pulse 2.2s ease-out infinite;
+}
+
+.oc-hint-ring span {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #fff;
+  animation: oc-meet 2.2s ease-in-out infinite;
+}
+
+.oc-hint-ring span:first-child {
+  left: 10px;
+}
+
+.oc-hint-ring span:last-child {
+  right: 10px;
+  animation-name: oc-meet-back;
+}
+
+@keyframes oc-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@keyframes oc-meet {
+  50% {
+    transform: translateX(8px);
+  }
+}
+
+@keyframes oc-meet-back {
+  50% {
+    transform: translateX(-8px);
+  }
+}
+
+/* Подпись подсказки стоит в самом низу, а не у кнопки: у шва места
+   нет, она легла бы на рисунки */
+.oc-hint-label {
+  position: absolute;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.oc-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.oc-replay {
+  bottom: max(14px, env(safe-area-inset-bottom));
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+}
+
+@media (min-aspect-ratio: 1/1) {
+  .oc-root {
+    --s: min(100vw / 1440, 100dvh / 960);
+  }
+
+  .oc-half {
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    height: auto;
+  }
+
+  .oc-half-mother {
+    left: 0;
+    right: auto;
+  }
+
+  .oc-half-father {
+    left: auto;
+    right: 0;
+  }
+
+  .oc-seam,
+  .oc-edge {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    right: auto;
+    width: 2px;
+    height: auto;
+    margin: 0 0 0 -1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(255, 255, 255, 0.85) 30%,
+      #fff 50%,
+      rgba(255, 255, 255, 0.85) 70%,
+      transparent
+    );
+  }
+
+  .oc-frame {
+    width: calc(1440 * var(--s));
+    height: calc(960 * var(--s));
+  }
+
+  .oc-el {
+    left: calc(var(--lx) * var(--s));
+    top: calc(var(--ly) * var(--s));
+    width: calc(var(--lw) * var(--s));
+  }
+
+  .oc-only-l {
+    display: block;
+  }
+
+  .oc-only-p {
+    display: none;
+  }
+
+  .oc-hint-label {
+    bottom: max(22px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oc-seam,
+  .oc-hint-ring::after,
+  .oc-hint-ring span {
+    animation: none;
+  }
+}
