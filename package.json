@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/export-images.mjs",
+    "check:export": "node scripts/check-export.mjs",
     "start": "next start",
     "lint": "eslint"
   },

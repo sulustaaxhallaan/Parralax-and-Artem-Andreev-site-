@@ -1,0 +1,120 @@
+# ==================================================================
+#  Деплой статической копии Parallax Studio на VPS.
+#
+#  ОБРАЗЕЦ, НЕ АКТИВЕН. GitHub читает workflow только из
+#  .github/workflows/, а этот файл лежит в deploy/ и с расширением
+#  .example. Чтобы включить — отдельное решение:
+#    cp deploy/github-actions/deploy-vps.yml.example .github/workflows/deploy-vps.yml
+#
+#  Почему сборка на CI, а не на своём компьютере. Next.js 16.2 при
+#  сборке на Windows кладёт файлы данных роутера в неправильные папки
+#  (подробно — в scripts/check-export.mjs), и переходы между страницами
+#  идут полной перезагрузкой. На Linux имена верные.
+#
+#  Секреты (Settings → Secrets and variables → Actions), только имена:
+#    VPS_HOST         адрес сервера
+#    VPS_USER         пользователь деплоя без sudo (deploy)
+#    VPS_SSH_KEY      приватный ключ, выпущенный только для деплоя
+#    VPS_KNOWN_HOSTS  отпечаток сервера: ssh-keyscan <адрес>
+#  Никаких ключей в репозитории.
+#
+#  Окружение vps (Settings → Environments) с обязательным
+#  подтверждением: сборка идёт сама, выкладка ждёт нажатия.
+# ==================================================================
+
+name: Deploy static copy to VPS
+
+on:
+  # Только вручную. Автодеплой по push в ветку — отдельным решением:
+  #   push:
+  #     branches: [parallax-static-vps]
+  workflow_dispatch:
+
+# Два деплоя одновременно не пойдут: второй подождёт первого
+concurrency:
+  group: vps-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Next 16 требует Node 20.9+; 22 — текущая LTS
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # npm ci ставит ровно то, что в package-lock, включая sharp
+      - run: npm ci
+
+      # next build → out/, затем postbuild нарезает картинки
+      - run: npm run build
+
+      # Предохранитель: что-то не нашлось — деплоя не будет
+      - run: npm run check:export
+
+      - run: du -sh out && find out -type f | wc -l
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: out
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: vps
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: out
+
+      - name: SSH-ключ и отпечаток сервера
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      # Новый релиз кладётся в отдельную папку, рядом с работающим.
+      # --link-dest: файлы, не изменившиеся с прошлого релиза, не
+      # копируются заново, а становятся жёсткими ссылками — на диске
+      # и в канале расходуются только изменения.
+      - name: Залить релиз
+        env:
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+          RELEASE: /var/www/parallax/releases/${{ github.sha }}
+        run: |
+          rsync -az --delete --checksum \
+            --link-dest=/var/www/parallax/current/ \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            out/ "$TARGET:$RELEASE/"
+
+      # Переключение одной операцией: mv -T заменяет ссылку атомарно,
+      # Nginx перезагружать не нужно — он сам проходит по ссылке.
+      # Хранятся последние 5 релизов, откат — переставить ссылку назад.
+      - name: Переключить current
+        env:
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+          SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$TARGET" "
+            set -e
+            cd /var/www/parallax
+            ln -sfn releases/$SHA current.tmp
+            mv -T current.tmp current
+            ls -1dt releases/* | tail -n +6 | xargs -r rm -rf
+          "
+
+      - name: Проверить, что сайт отвечает
+        run: |
+          for path in / /design /design/prices /web; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.VPS_HOST }}$path")
+            echo "$path → $code"
+            [ "$code" = "200" ] || exit 1
+          done
