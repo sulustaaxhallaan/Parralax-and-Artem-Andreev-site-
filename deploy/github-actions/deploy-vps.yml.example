@@ -1,45 +1,83 @@
 # ==================================================================
-#  Деплой статической копии Parallax Studio на VPS.
+#  Деплой статической копии Parallax Studio на VPS 5.129.210.143.
 #
 #  ОБРАЗЕЦ, НЕ АКТИВЕН. GitHub читает workflow только из
 #  .github/workflows/, а этот файл лежит в deploy/ и с расширением
-#  .example. Чтобы включить — отдельное решение:
+#  .example. Включение — отдельным решением:
 #    cp deploy/github-actions/deploy-vps.yml.example .github/workflows/deploy-vps.yml
 #
-#  Почему сборка на CI, а не на своём компьютере. Next.js 16.2 при
-#  сборке на Windows кладёт файлы данных роутера в неправильные папки
-#  (подробно — в scripts/check-export.mjs), и переходы между страницами
-#  идут полной перезагрузкой. На Linux имена верные.
+#  ПОЧЕМУ ЗАПУСК ПО PUSH, А НЕ КНОПКОЙ. Кнопка «Run workflow»
+#  (workflow_dispatch) работает, только если файл лежит в main, а main
+#  менять нельзя. Поэтому сборка и проверка идут сами по push в ветку
+#  parallax-static-vps, а ВЫКЛАДКА ЗАПЕРТА ТРЕМЯ ЗАМКАМИ:
 #
-#  Секреты (Settings → Secrets and variables → Actions), только имена:
-#    VPS_HOST         адрес сервера
-#    VPS_USER         пользователь деплоя без sudo (deploy)
-#    VPS_SSH_KEY      приватный ключ, выпущенный только для деплоя
-#    VPS_KNOWN_HOSTS  отпечаток сервера: ssh-keyscan <адрес>
-#  Никаких ключей в репозитории.
+#    1. переменная репозитория VPS_DEPLOY_ENABLED = true —
+#       без неё выкладка пропускается, сборка просто проверяется;
+#    2. job gate проверяет, что у окружения vps есть обязательные
+#       проверяющие (Required reviewers). Нет окружения, нет
+#       проверяющих, не удалось прочитать — выкладка ОСТАНОВЛЕНА.
+#       Без этого замка GitHub при первом запуске сам создал бы
+#       окружение vps без защиты, и выкладка прошла бы без подтверждения;
+#    3. сама выкладка ждёт нажатия «Approve» в окружении vps.
 #
-#  Окружение vps (Settings → Environments) с обязательным
-#  подтверждением: сборка идёт сама, выкладка ждёт нажатия.
+#  Повторить выкладку той же сборки — «Re-run jobs» на нужном запуске:
+#  она снова попросит подтверждения и ляжет в новую папку релиза.
+#
+#  ПОЧЕМУ СБОРКА НА CI. Next.js 16.2 при сборке на Windows кладёт
+#  файлы данных роутера в неправильные папки (см.
+#  scripts/check-export.mjs). На Linux имена верные.
+#
+#  НАСТРОЙКА В GITHUB (Settings), только имена — никаких значений здесь:
+#    Environments → vps → Required reviewers: вы
+#    Environments → vps → Environment secrets:
+#      VPS_SSH_KEY      приватный ключ, выпущенный только для деплоя
+#      VPS_KNOWN_HOSTS  строка из ssh-keyscan; отпечаток сверить с
+#                       сервером: ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+#    Secrets and variables → Actions → Variables:
+#      VPS_DEPLOY_ENABLED  true — включить выкладку
+#      VPS_SSH_PORT        только если SSH не на 22
+#  Секреты — в окружении, а не в репозитории: сборка их не видит вовсе,
+#  выкладка получает только после подтверждения.
+#
+#  РУЧНОЙ ОТКАТ (с вашей машины):
+#    ssh deploy@5.129.210.143 'cd /var/www/parallax && ls -1dt releases/*/ && readlink current'
+#    ssh deploy@5.129.210.143 'cd /var/www/parallax && ln -sfn releases/<ID> current.tmp && mv -T current.tmp current'
 # ==================================================================
 
 name: Deploy static copy to VPS
 
 on:
-  # Только вручную. Автодеплой по push в ветку — отдельным решением:
-  #   push:
-  #     branches: [parallax-static-vps]
-  workflow_dispatch:
+  push:
+    branches: [parallax-static-vps]
+
+# Workflow не может ничего записать в репозиторий — ни в main, ни куда-то ещё
+permissions:
+  contents: read
 
 # Два деплоя одновременно не пойдут: второй подождёт первого
 concurrency:
   group: vps-deploy
   cancel-in-progress: false
 
+# Не секреты: адрес и так в конфиге Nginx, имя пользователя — тоже.
+# Вписаны прямо сюда, чтобы по коду было видно, кто и куда выкладывает.
+env:
+  VPS_HOST: 5.129.210.143
+  VPS_USER: deploy
+  VPS_BASE: /var/www/parallax
+  KEEP_RELEASES: 5
+
 jobs:
+  # ------------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # токен не остаётся в .git/config на время сборки
+          persist-credentials: false
 
       # Next 16 требует Node 20.9+; 22 — текущая LTS
       - uses: actions/setup-node@v4
@@ -47,13 +85,24 @@ jobs:
           node-version: 22
           cache: npm
 
-      # npm ci ставит ровно то, что в package-lock, включая sharp
+      # npm ci ставит ровно то, что в package-lock; Linux-бинарники
+      # Next, Tailwind, Lightning CSS и sharp в нём есть
       - run: npm ci
 
       # next build → out/, затем postbuild нарезает картинки
       - run: npm run build
 
-      # Предохранитель: что-то не нашлось — деплоя не будет
+      # Метка версии: коммит + номер запуска. Проверка после выкладки
+      # сравнивает её с тем, что отдаёт сервер, — код 200 вернул бы и
+      # старый релиз, а метка доказывает, что живёт именно новый.
+      - name: Метка версии
+        id: version
+        run: |
+          VERSION="${GITHUB_SHA}.${GITHUB_RUN_ID}"
+          printf '%s\n' "$VERSION" > out/version.txt
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # Предохранитель: что-то не нашлось — дальше не идём
       - run: npm run check:export
 
       - run: du -sh out && find out -type f | wc -l
@@ -63,58 +112,218 @@ jobs:
           name: site
           path: out
           retention-days: 7
+          if-no-files-found: error
 
-  deploy:
+  # ------------------------------------------------------------------
+  # Замки 1 и 2. Отдельный job без секретов и без окружения: если он
+  # не пропустит, job deploy даже не стартует — а значит, GitHub не
+  # создаст окружение vps без защиты.
+  gate:
     needs: build
     runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+    steps:
+      - name: Можно ли выкладывать
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENABLED: ${{ vars.VPS_DEPLOY_ENABLED }}
+        run: |
+          set -euo pipefail
+          say() { echo "$1"; echo "$1" >> "$GITHUB_STEP_SUMMARY"; }
+
+          if [ "$GITHUB_REF" != "refs/heads/parallax-static-vps" ]; then
+            say "⛔ Выкладка разрешена только из ветки parallax-static-vps, а запуск из $GITHUB_REF."
+            echo "ok=false" >> "$GITHUB_OUTPUT"; exit 1
+          fi
+
+          if [ "${ENABLED:-}" != "true" ]; then
+            say "⏸ Выкладка выключена: VPS_DEPLOY_ENABLED не равна true. Сборка проверена, на сервер ничего не отправлено."
+            echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+
+          # Считаем проверяющих по самим спискам reviewers, не завязываясь
+          # на название типа правила. Ошибка чтения = стоп, а не «пропустить».
+          if ! REVIEWERS=$(gh api "repos/$GITHUB_REPOSITORY/environments/vps" \
+                --jq '[.protection_rules[]? | (.reviewers // []) | length] | add // 0'); then
+            say "⛔ Окружение vps не найдено или не читается. Выкладка остановлена: без него подтверждение невозможно."
+            echo "ok=false" >> "$GITHUB_OUTPUT"; exit 1
+          fi
+
+          if [ "${REVIEWERS:-0}" -lt 1 ]; then
+            say "⛔ У окружения vps нет обязательных проверяющих (Required reviewers). Выкладка без подтверждения запрещена."
+            echo "ok=false" >> "$GITHUB_OUTPUT"; exit 1
+          fi
+
+          say "✅ Окружение vps защищено, проверяющих: $REVIEWERS. Выкладка ждёт подтверждения."
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+  # ------------------------------------------------------------------
+  # Замок 3: environment vps — job стоит, пока проверяющий не нажмёт Approve
+  deploy:
+    needs: [build, gate]
+    if: needs.gate.outputs.ok == 'true'
+    runs-on: ubuntu-latest
     environment: vps
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      # Номер попытки в имени: повторная выкладка той же сборки ляжет в
+      # новую папку, а не поверх работающего релиза
+      RELEASE: ${{ needs.build.outputs.version }}.${{ github.run_attempt }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: site
           path: out
 
-      - name: SSH-ключ и отпечаток сервера
+      - name: Сверить метку версии в сборке
         run: |
-          install -m 700 -d ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          got=$(tr -d '[:space:]' < out/version.txt)
+          [ "$got" = "$VERSION" ] || { echo "⛔ В артефакте $got, ждали $VERSION"; exit 1; }
 
-      # Новый релиз кладётся в отдельную папку, рядом с работающим.
-      # --link-dest: файлы, не изменившиеся с прошлого релиза, не
-      # копируются заново, а становятся жёсткими ссылками — на диске
-      # и в канале расходуются только изменения.
+      # Секреты передаются через переменные окружения, а не подстановкой
+      # в текст команды — так рекомендует GitHub
+      - name: SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          SSH_PORT: ${{ vars.VPS_SSH_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SSH_KEY" ] || [ -z "$KNOWN_HOSTS" ]; then
+            echo "⛔ В окружении vps нет секретов VPS_SSH_KEY или VPS_KNOWN_HOSTS"; exit 1
+          fi
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          cat > "$HOME/.ssh/config" <<EOF
+          Host vps
+            HostName $VPS_HOST
+            User $VPS_USER
+            Port $SSH_PORT
+            IdentityFile $HOME/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            BatchMode yes
+          EOF
+          chmod 600 "$HOME/.ssh/config"
+          ssh vps true
+
+      # Новый релиз — в отдельную папку рядом с работающим. mkdir без -p:
+      # если такая папка уже есть, остановимся, а не перезапишем её.
+      # --link-dest: неизменившиеся файлы становятся жёсткими ссылками на
+      # прошлый релиз. На первом деплое прошлого нет — флаг не ставится.
       - name: Залить релиз
-        env:
-          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
-          RELEASE: /var/www/parallax/releases/${{ github.sha }}
+        id: upload
         run: |
-          rsync -az --delete --checksum \
-            --link-dest=/var/www/parallax/current/ \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
-            out/ "$TARGET:$RELEASE/"
+          set -euo pipefail
+          ssh vps "mkdir '$VPS_BASE/releases/$RELEASE'"
+          LINK=()
+          if ssh vps "test -d '$VPS_BASE/current/'"; then
+            LINK=(--link-dest="$VPS_BASE/current/")
+          else
+            echo "Прошлого релиза нет — первый деплой, заливаем целиком"
+          fi
+          rsync -az --checksum "${LINK[@]}" -e ssh out/ "vps:$VPS_BASE/releases/$RELEASE/"
 
-      # Переключение одной операцией: mv -T заменяет ссылку атомарно,
-      # Nginx перезагружать не нужно — он сам проходит по ссылке.
-      # Хранятся последние 5 релизов, откат — переставить ссылку назад.
+      # Запоминаем, куда смотрела ссылка current, и переключаем её одной
+      # операцией: mv -T заменяет ссылку атомарно, Nginx перезагружать
+      # не нужно. На первом деплое ссылки нет — prev останется пустым.
       - name: Переключить current
-        env:
-          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
-          SHA: ${{ github.sha }}
+        id: switch
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$TARGET" "
-            set -e
-            cd /var/www/parallax
-            ln -sfn releases/$SHA current.tmp
-            mv -T current.tmp current
-            ls -1dt releases/* | tail -n +6 | xargs -r rm -rf
-          "
+          set -euo pipefail
+          PREV=$(ssh vps "readlink '$VPS_BASE/current' || true")
+          echo "prev=$PREV" >> "$GITHUB_OUTPUT"
+          echo "Было: ${PREV:-нет (первый деплой)}"
+          ssh vps bash -s -- "$VPS_BASE" "$RELEASE" <<'REMOTE'
+          set -euo pipefail
+          cd "$1"
+          test -f "releases/$2/version.txt"
+          ln -sfn "releases/$2" current.tmp
+          mv -T current.tmp current
+          echo "Стало: $(readlink current)"
+          REMOTE
 
-      - name: Проверить, что сайт отвечает
+      - name: Проверить новую версию
         run: |
+          set -uo pipefail
+          got=""
+          for i in 1 2 3 4 5; do
+            got=$(curl -fsS --max-time 10 "http://$VPS_HOST/version.txt" | tr -d '[:space:]') || got=""
+            [ "$got" = "$VERSION" ] && break
+            sleep 3
+          done
+          if [ "$got" != "$VERSION" ]; then
+            echo "⛔ Сервер отдаёт версию '$got', ждали $VERSION"; exit 1
+          fi
+          echo "version.txt → $got ✓"
+
           for path in / /design /design/prices /web; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.VPS_HOST }}$path")
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://$VPS_HOST$path")
             echo "$path → $code"
             [ "$code" = "200" ] || exit 1
           done
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://$VPS_HOST/prices")
+          echo "/prices → $code (ждём 301 на /design/prices)"
+          [ "$code" = "301" ] || exit 1
+
+      # Откат — только если ссылку успели переключить, а проверка упала.
+      # Был прошлый релиз — возвращаем на него. Первый деплой — убираем
+      # ссылку: сервер возвращается в исходное состояние «сайта нет».
+      # Неудачный релиз не удаляется: он остаётся для разбора.
+      - name: Откат при неудаче
+        if: failure() && steps.switch.outcome == 'success'
+        env:
+          PREV: ${{ steps.switch.outputs.prev }}
+        run: |
+          set -euo pipefail
+          ssh vps bash -s -- "$VPS_BASE" "${PREV:-none}" <<'REMOTE'
+          set -euo pipefail
+          cd "$1"
+          if [ "$2" != "none" ] && [ -d "$2" ]; then
+            ln -sfn "$2" current.tmp
+            mv -T current.tmp current
+            echo "↩ Откат: current снова указывает на $(readlink current)"
+          else
+            rm -f current
+            echo "↩ Первый деплой не прошёл проверку: ссылка current убрана, сайт не отдаётся"
+          fi
+          REMOTE
+          echo "Неудачный релиз оставлен для разбора: releases/$RELEASE" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Заливка оборвалась — убираем недолитую папку, но никогда не ту,
+      # на которую смотрит current
+      - name: Убрать недолитый релиз
+        if: failure() && steps.upload.outcome == 'failure'
+        run: |
+          ssh vps bash -s -- "$VPS_BASE" "$RELEASE" <<'REMOTE' || true
+          cd "$1" || exit 0
+          [ "$(readlink current 2>/dev/null)" = "releases/$2" ] || rm -rf -- "releases/$2"
+          REMOTE
+
+      # Старые релизы — только после успешной проверки. Всегда остаются
+      # текущий и предыдущий (на него откатываться), плюс последние
+      # KEEP_RELEASES по времени.
+      - name: Удалить старые релизы
+        if: success()
+        env:
+          PREV: ${{ steps.switch.outputs.prev }}
+        run: |
+          set -euo pipefail
+          ssh vps bash -s -- "$VPS_BASE" "${PREV:-none}" "$KEEP_RELEASES" <<'REMOTE'
+          set -euo pipefail
+          cd "$1"
+          cur=$(readlink current)
+          ls -1dt releases/*/ | sed 's#/$##' | tail -n +"$(( $3 + 1 ))" | while read -r d; do
+            if [ "$d" != "$cur" ] && [ "$d" != "$2" ]; then
+              rm -rf -- "$d"
+              echo "удалён $d"
+            fi
+          done
+          echo "Релизов на сервере: $(ls -1d releases/*/ | wc -l)"
+          REMOTE
+          echo "✅ Выкладка $VERSION прошла проверку" >> "$GITHUB_STEP_SUMMARY"
