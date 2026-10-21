@@ -12,8 +12,11 @@
 #  менять нельзя. Поэтому сборка и проверка идут сами по push в ветку
 #  parallax-static-vps, а ВЫКЛАДКА ЗАПЕРТА ТРЕМЯ ЗАМКАМИ:
 #
-#    1. переменная репозитория VPS_DEPLOY_ENABLED = true —
-#       без неё выкладка пропускается, сборка просто проверяется;
+#    1. переменная РЕПОЗИТОРИЯ VPS_DEPLOY_ENABLED = true —
+#       без неё выкладка пропускается, сборка просто проверяется.
+#       Именно репозитория, не окружения vps: переменные окружения
+#       видны только job'ам, которые на него ссылаются, а gate не
+#       ссылается намеренно. dry-run — все проверки без выкладки;
 #    2. job gate проверяет, что у окружения vps есть обязательные
 #       проверяющие (Required reviewers). Нет окружения, нет
 #       проверяющих, не удалось прочитать — выкладка ОСТАНОВЛЕНА.
@@ -34,9 +37,11 @@
 #      VPS_SSH_KEY      приватный ключ, выпущенный только для деплоя
 #      VPS_KNOWN_HOSTS  строка из ssh-keyscan; отпечаток сверить с
 #                       сервером: ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
-#    Secrets and variables → Actions → Variables:
-#      VPS_DEPLOY_ENABLED  true — включить выкладку
-#      VPS_SSH_PORT        только если SSH не на 22
+#    Secrets and variables → Actions → Variables → Repository variables
+#    (вкладка репозитория, НЕ Environments → vps):
+#      VPS_DEPLOY_ENABLED  true — выкладка; dry-run — проверки без неё
+#    VPS_SSH_PORT — только если SSH не на 22. Подойдёт любой уровень:
+#      её читает только deploy, а он к окружению vps привязан
 #  Секреты — в окружении, а не в репозитории: сборка их не видит вовсе,
 #  выкладка получает только после подтверждения.
 #
@@ -130,34 +135,53 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ENABLED: ${{ vars.VPS_DEPLOY_ENABLED }}
+        # VPS_DEPLOY_ENABLED читается из переменных РЕПОЗИТОРИЯ. Переменные
+        # окружения vps этому job не видны: по документации GitHub они
+        # доступны только job'ам, которые ссылаются на окружение. А
+        # сослаться gate на vps нельзя — тогда он сам встал бы на
+        # подтверждение и после него получил бы доступ к SSH-ключу.
+        #
+        # Значения: true — выкладка (ждёт Approve); dry-run — все проверки,
+        # включая проверяющих, но выкладка не запускается; иначе — выключено.
         run: |
           set -euo pipefail
-          say() { echo "$1"; echo "$1" >> "$GITHUB_STEP_SUMMARY"; }
+          # Строка в журнал, в итог запуска и в аннотацию (её видно в
+          # интерфейсе и через API, даже не открывая журнал)
+          say() { echo "::$1 title=gate::$2"; echo "$2" >> "$GITHUB_STEP_SUMMARY"; }
 
           if [ "$GITHUB_REF" != "refs/heads/parallax-static-vps" ]; then
-            say "⛔ Выкладка разрешена только из ветки parallax-static-vps, а запуск из $GITHUB_REF."
+            say error "⛔ Выкладка разрешена только из ветки parallax-static-vps, а запуск из $GITHUB_REF."
             echo "ok=false" >> "$GITHUB_OUTPUT"; exit 1
           fi
 
-          if [ "${ENABLED:-}" != "true" ]; then
-            say "⏸ Выкладка выключена: VPS_DEPLOY_ENABLED не равна true. Сборка проверена, на сервер ничего не отправлено."
-            echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0
-          fi
+          MODE="${ENABLED:-}"
+          case "$MODE" in
+            true|dry-run) ;;
+            *)
+              say notice "⏸ Выкладка выключена: VPS_DEPLOY_ENABLED = «${MODE:-пусто}». Переменная читается из Repository variables; переменные окружения vps этому job не видны. Сборка проверена, на сервер ничего не отправлено."
+              echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0
+              ;;
+          esac
 
           # Считаем проверяющих по самим спискам reviewers, не завязываясь
           # на название типа правила. Ошибка чтения = стоп, а не «пропустить».
           if ! REVIEWERS=$(gh api "repos/$GITHUB_REPOSITORY/environments/vps" \
                 --jq '[.protection_rules[]? | (.reviewers // []) | length] | add // 0'); then
-            say "⛔ Окружение vps не найдено или не читается. Выкладка остановлена: без него подтверждение невозможно."
+            say error "⛔ Окружение vps не найдено или не читается. Выкладка остановлена: без него подтверждение невозможно."
             echo "ok=false" >> "$GITHUB_OUTPUT"; exit 1
           fi
 
           if [ "${REVIEWERS:-0}" -lt 1 ]; then
-            say "⛔ У окружения vps нет обязательных проверяющих (Required reviewers). Выкладка без подтверждения запрещена."
+            say error "⛔ У окружения vps нет обязательных проверяющих (Required reviewers). Выкладка без подтверждения запрещена."
             echo "ok=false" >> "$GITHUB_OUTPUT"; exit 1
           fi
 
-          say "✅ Окружение vps защищено, проверяющих: $REVIEWERS. Выкладка ждёт подтверждения."
+          if [ "$MODE" = "dry-run" ]; then
+            say notice "🧪 Пробный режим: окружение vps защищено, проверяющих: $REVIEWERS. Всё готово к выкладке, но она не запускается."
+            echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+
+          say notice "✅ Окружение vps защищено, проверяющих: $REVIEWERS. Выкладка ждёт подтверждения."
           echo "ok=true" >> "$GITHUB_OUTPUT"
 
   # ------------------------------------------------------------------
