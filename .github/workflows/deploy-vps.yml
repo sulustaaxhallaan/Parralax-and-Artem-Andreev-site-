@@ -1,10 +1,11 @@
 # ==================================================================
 #  Деплой статической копии Parallax Studio на VPS 5.129.210.143.
 #
-#  ОБРАЗЕЦ, НЕ АКТИВЕН. GitHub читает workflow только из
-#  .github/workflows/, а этот файл лежит в deploy/ и с расширением
-#  .example. Включение — отдельным решением:
-#    cp deploy/github-actions/deploy-vps.yml.example .github/workflows/deploy-vps.yml
+#  АКТИВЕН: срабатывает на push в parallax-static-vps. Пока переменная
+#  VPS_DEPLOY_ENABLED не равна true, он только собирает и проверяет
+#  сайт — на сервер ничего не уходит.
+#
+#  Vercel эту ветку не собирает: см. vercel.json в корне ветки.
 #
 #  ПОЧЕМУ ЗАПУСК ПО PUSH, А НЕ КНОПКОЙ. Кнопка «Run workflow»
 #  (workflow_dispatch) работает, только если файл лежит в main, а main
