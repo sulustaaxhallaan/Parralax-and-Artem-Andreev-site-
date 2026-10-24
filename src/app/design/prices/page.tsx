@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { contacts } from "@/content/design/site";
 import {
+    aiVideo,
+    aiVideoRates,
     priceCategories,
     priceContact,
     priceFaq,
@@ -10,12 +12,13 @@ import {
     pricesPage,
     type PriceService,
 } from "@/content/design/prices";
+import AiVideoCalculator from "../components/AiVideoCalculator";
 import Icon from "../components/Icons";
 
 export const metadata: Metadata = {
     title: "Прайс на дизайн — Артём Андреев",
     description:
-        "Цены на услуги графического дизайнера Артёма Андреева: полиграфия, брендинг, наружная реклама, digital, веб-дизайн и оформление мероприятий. Сроки, включённые правки и условия срочности.",
+        "Цены на услуги графического дизайнера Артёма Андреева: полиграфия, AI-видео с калькулятором ролика, брендинг, наружная реклама, digital, веб-дизайн и оформление мероприятий. Сроки, включённые правки и условия срочности.",
     openGraph: {
         title: "Прайс на дизайн — Артём Андреев",
         description:
@@ -24,6 +27,11 @@ export const metadata: Metadata = {
         locale: "ru_RU",
     },
 };
+
+/* Номер WhatsApp берём из контактов сайта, чтобы он жил в одном месте:
+   калькулятор только дописывает к ссылке готовое сообщение. */
+const whatsappHref =
+    contacts.quick.find((item) => item.id === "whatsapp")?.href ?? "https://wa.me/79969147516";
 
 /* Портфолио живёт в одном неподвижном кадре, а прайс — обычная длинная
    страница: со своей прокруткой, липкой шапкой и якорями по категориям.
@@ -74,10 +82,23 @@ export default function PricesPage() {
                                 ) : null}
                             </header>
 
-                            <div className="border-t border-line">
-                                {category.services.map((service) => (
-                                    <Service key={service.title} service={service} />
-                                ))}
+                            <div className="min-w-0">
+                                <div className="border-t border-line">
+                                    {category.services.map((service) => (
+                                        <Service key={service.title} service={service} />
+                                    ))}
+                                </div>
+
+                                {category.withAiVideoCalculator ? (
+                                    <>
+                                        <AiVideoCalculator
+                                            rates={aiVideoRates}
+                                            texts={aiVideo.calculator}
+                                            whatsappHref={whatsappHref}
+                                        />
+                                        <AiVideoTerms />
+                                    </>
+                                ) : null}
                             </div>
                         </section>
                     ))}
@@ -295,10 +316,13 @@ function Service({ service }: { service: PriceService }) {
                 </p>
 
                 <dl className="mt-3.5 text-[0.82rem] sm:text-[0.9rem]">
-                    <div className="mt-1 flex flex-wrap gap-x-2">
-                        <dt className="text-ink-faint">Срок:</dt>
-                        <dd className="m-0 text-accent">{service.deadline}</dd>
-                    </div>
+                    {/* У AI-видео срока в прайсе нет: он зависит от задачи */}
+                    {service.deadline ? (
+                        <div className="mt-1 flex flex-wrap gap-x-2">
+                            <dt className="text-ink-faint">Срок:</dt>
+                            <dd className="m-0 text-accent">{service.deadline}</dd>
+                        </div>
+                    ) : null}
                     {/* У брендинга правок в прайсе нет — почему,
                         сказано в пояснении под названием категории */}
                     {service.revisions ? (
@@ -378,6 +402,34 @@ function priceNote(service: PriceService) {
         return "Индивидуальный расчёт";
     }
     return null;
+}
+
+/* Условия AI-видео — тем же рисунком, что общие условия наверху
+   страницы, только под калькулятором: правки, озвучка и музыка
+   касаются именно ролика. */
+function AiVideoTerms() {
+    return (
+        <div className="mt-9">
+            <h3 className="display display-wrap text-[1.05rem] uppercase tracking-[0.04em] sm:text-[1.15rem]">
+                {aiVideo.terms.title}
+            </h3>
+            <div className="mt-4 grid gap-5 md:grid-cols-3">
+                {aiVideo.terms.items.map((item) => (
+                    <div
+                        key={item.title}
+                        className="border-l border-[rgba(127,210,240,0.34)] pl-4"
+                    >
+                        <h4 className="text-[0.95rem] font-medium text-accent sm:text-[1rem]">
+                            {item.title}
+                        </h4>
+                        <p className="mt-2 text-[0.88rem] leading-[1.7] text-ink-faint sm:text-[0.95rem] sm:leading-6">
+                            {item.text}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 function Faq() {
