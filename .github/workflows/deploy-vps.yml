@@ -69,6 +69,9 @@ concurrency:
 # Вписаны прямо сюда, чтобы по коду было видно, кто и куда выкладывает.
 env:
   VPS_HOST: 5.129.210.143
+  # Проверка после выкладки идёт по настоящему адресу сайта: с переходом
+  # на HTTPS Nginx отдаёт сайт только по имени, а на голый IP отвечает 404.
+  SITE_URL: https://parallax-art.ru
   VPS_USER: deploy
   VPS_BASE: /var/www/parallax
   KEEP_RELEASES: 5
@@ -277,7 +280,7 @@ jobs:
           set -uo pipefail
           got=""
           for i in 1 2 3 4 5; do
-            got=$(curl -fsS --max-time 10 "http://$VPS_HOST/version.txt" | tr -d '[:space:]') || got=""
+            got=$(curl -fsS --max-time 10 "$SITE_URL/version.txt" | tr -d '[:space:]') || got=""
             [ "$got" = "$VERSION" ] && break
             sleep 3
           done
@@ -287,12 +290,12 @@ jobs:
           echo "version.txt → $got ✓"
 
           for path in / /design /design/prices /web; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://$VPS_HOST$path")
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$SITE_URL$path")
             echo "$path → $code"
             [ "$code" = "200" ] || exit 1
           done
 
-          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://$VPS_HOST/prices")
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$SITE_URL/prices")
           echo "/prices → $code (ждём 301 на /design/prices)"
           [ "$code" = "301" ] || exit 1
 
